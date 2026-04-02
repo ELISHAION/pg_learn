@@ -1,0 +1,2572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>PGLearn — PostgreSQL Mastery</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080B14;
+    --surface: #0E1320;
+    --surface2: #151C2E;
+    --surface3: #1C2540;
+    --border: #1E2D4A;
+    --accent: #00D4FF;
+    --accent2: #7C3AED;
+    --green: #10B981;
+    --yellow: #F59E0B;
+    --red: #EF4444;
+    --orange: #F97316;
+    --pink: #EC4899;
+    --text: #E2EAF4;
+    --muted: #5A7090;
+    --muted2: #3A5070;
+    --code-bg: #060910;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-display: 'Syne', sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-display); min-height: 100vh; overflow-x: hidden; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* HEADER */
+  .header {
+    position: sticky; top: 0; z-index: 200;
+    background: rgba(8,11,20,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo {
+    font-size: 18px; font-weight: 800; color: var(--accent);
+    letter-spacing: -1px; white-space: nowrap;
+    text-shadow: 0 0 20px rgba(0,212,255,0.4);
+  }
+  .logo span { color: var(--muted); font-weight: 400; }
+  .search-wrap { flex: 1; position: relative; }
+  .search-wrap input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px 8px 32px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-wrap input:focus { border-color: var(--accent); }
+  .search-wrap::before {
+    content: '⌕'; position: absolute; left: 10px; top: 50%;
+    transform: translateY(-50%); color: var(--muted); font-size: 16px;
+  }
+  .hbtn {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 7px 10px;
+    color: var(--muted); cursor: pointer; font-size: 16px;
+    transition: all 0.2s; white-space: nowrap;
+  }
+  .hbtn:hover, .hbtn.active { border-color: var(--accent); color: var(--accent); }
+
+  /* NAV TABS */
+  .nav-tabs {
+    display: flex; gap: 4px; padding: 10px 12px;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .ntab {
+    padding: 6px 14px; border-radius: 6px; cursor: pointer;
+    font-size: 12px; font-weight: 600; white-space: nowrap;
+    border: 1px solid transparent; transition: all 0.2s;
+    color: var(--muted); background: transparent;
+  }
+  .ntab.active { background: var(--accent); color: #000; border-color: var(--accent); }
+  .ntab:not(.active):hover { color: var(--text); border-color: var(--border); }
+
+  /* VIEWS */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* HOME */
+  .home-hero {
+    padding: 24px 16px 16px;
+    background: linear-gradient(135deg, var(--surface) 0%, var(--bg) 100%);
+    border-bottom: 1px solid var(--border);
+    position: relative; overflow: hidden;
+  }
+  .home-hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 70% 50%, rgba(0,212,255,0.06) 0%, transparent 70%);
+  }
+  .hero-title {
+    font-size: 24px; font-weight: 800; line-height: 1.2;
+    margin-bottom: 6px;
+    background: linear-gradient(90deg, var(--text), var(--accent));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+  .stats-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .stat-pill {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 6px 14px;
+    font-size: 11px; font-family: var(--font-mono); color: var(--muted);
+  }
+  .stat-pill strong { color: var(--accent); }
+
+  /* PROGRESS BAR */
+  .progress-section { padding: 16px; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+  .progress-bar { height: 4px; background: var(--surface3); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; transition: width 0.5s ease; }
+
+  /* MODULE CARDS */
+  .modules-grid { padding: 0 12px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .module-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px; cursor: pointer;
+    transition: all 0.2s; position: relative; overflow: hidden;
+  }
+  .module-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: var(--card-color, var(--accent));
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .module-card:hover::before { opacity: 0.04; }
+  .module-card:hover { border-color: var(--card-color, var(--accent)); transform: translateY(-1px); }
+  .mc-icon { font-size: 24px; margin-bottom: 8px; }
+  .mc-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .mc-meta { font-size: 10px; color: var(--muted); font-family: var(--font-mono); }
+  .mc-bar { height: 2px; background: var(--surface3); border-radius: 1px; margin-top: 10px; overflow: hidden; }
+  .mc-bar-fill { height: 100%; border-radius: 1px; transition: width 0.4s; }
+  .mc-badge {
+    position: absolute; top: 10px; right: 10px;
+    background: var(--card-color, var(--accent)); color: #000;
+    border-radius: 4px; padding: 2px 6px; font-size: 9px; font-weight: 700;
+  }
+
+  /* LESSON LIST */
+  .lesson-header {
+    padding: 16px; border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .back-btn {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--muted); cursor: pointer;
+    margin-bottom: 10px; background: none; border: none;
+    font-family: var(--font-display);
+  }
+  .back-btn:hover { color: var(--accent); }
+  .lh-title { font-size: 18px; font-weight: 800; }
+  .lh-desc { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .lesson-item {
+    padding: 14px 16px; border-bottom: 1px solid var(--border);
+    cursor: pointer; display: flex; align-items: center; gap: 12px;
+    transition: background 0.15s;
+  }
+  .lesson-item:hover { background: var(--surface2); }
+  .li-num {
+    width: 28px; height: 28px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; font-family: var(--font-mono);
+    flex-shrink: 0;
+  }
+  .li-num.done { background: var(--green); color: #000; }
+  .li-num.current { background: var(--accent); color: #000; }
+  .li-num.locked { background: var(--surface3); color: var(--muted2); }
+  .li-info { flex: 1; }
+  .li-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .li-sub { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+  .li-bm { font-size: 16px; cursor: pointer; padding: 4px; }
+
+  /* LESSON CONTENT */
+  .lesson-content { padding: 16px; }
+  .lc-breadcrumb { font-size: 11px; color: var(--muted); margin-bottom: 12px; font-family: var(--font-mono); }
+  .lc-title { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+  .lc-summary {
+    font-size: 13px; color: var(--muted); line-height: 1.7;
+    margin-bottom: 16px; border-left: 3px solid var(--accent);
+    padding-left: 12px;
+  }
+
+  /* CONTENT TABS */
+  .ctabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+  .ctab {
+    padding: 7px 14px; border-radius: 6px; cursor: pointer;
+    font-size: 12px; font-weight: 600; border: 1px solid var(--border);
+    background: transparent; color: var(--muted);
+    font-family: var(--font-display); transition: all 0.2s;
+  }
+  .ctab.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+  /* KEY POINTS */
+  .kp-item {
+    display: flex; gap: 10px; padding: 10px 0;
+    border-bottom: 1px solid var(--border); align-items: flex-start;
+  }
+  .kp-num { color: var(--accent); font-weight: 700; font-family: var(--font-mono); font-size: 12px; min-width: 24px; margin-top: 1px; }
+  .kp-text { font-size: 13px; line-height: 1.6; }
+
+  /* CODE BLOCK */
+  .code-block {
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 10px; position: relative; margin-bottom: 12px;
+  }
+  .code-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 14px; border-bottom: 1px solid var(--border);
+  }
+  .code-lang { font-size: 10px; color: var(--muted); font-family: var(--font-mono); letter-spacing: 1px; }
+  .copy-btn {
+    background: var(--surface3); border: 1px solid var(--border);
+    border-radius: 4px; color: var(--muted); cursor: pointer;
+    font-size: 11px; padding: 3px 8px; font-family: var(--font-mono);
+    transition: all 0.2s;
+  }
+  .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .copy-btn.copied { color: var(--green); border-color: var(--green); }
+  pre {
+    padding: 14px 16px; overflow-x: auto;
+    font-family: var(--font-mono); font-size: 12px;
+    line-height: 1.8; color: var(--green);
+  }
+  .note-box {
+    background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.2);
+    border-radius: 8px; padding: 12px 14px;
+    font-size: 12px; line-height: 1.7;
+    color: #6EE7B7; margin-top: 12px;
+  }
+  .warn-box {
+    background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 8px; padding: 12px 14px;
+    font-size: 12px; line-height: 1.7;
+    color: #FCD34D; margin-top: 12px;
+  }
+  .diagram-box {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px;
+    font-family: var(--font-mono); font-size: 11px;
+    line-height: 2; color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  /* NEXT/PREV */
+  .lesson-nav {
+    display: flex; gap: 8px; padding: 16px;
+    border-top: 1px solid var(--border); margin-top: 8px;
+  }
+  .nav-btn {
+    flex: 1; padding: 12px; border-radius: 8px; cursor: pointer;
+    font-size: 13px; font-weight: 600; font-family: var(--font-display);
+    border: 1px solid var(--border); background: var(--surface2);
+    color: var(--text); transition: all 0.2s;
+  }
+  .nav-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .nav-btn.primary { background: var(--accent); color: #000; border-color: var(--accent); }
+  .nav-btn.primary:hover { background: #00b8d9; }
+
+  /* SQL PLAYGROUND */
+  .playground { padding: 16px; }
+  .pg-title { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+  .pg-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+  .dataset-select {
+    display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .ds-btn {
+    padding: 6px 12px; border-radius: 6px; cursor: pointer;
+    font-size: 11px; font-weight: 700; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--muted);
+    font-family: var(--font-mono); transition: all 0.2s;
+  }
+  .ds-btn.active { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+  .sql-editor-wrap {
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden; margin-bottom: 10px;
+  }
+  .sql-editor-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 12px; border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .sql-label { font-size: 10px; color: var(--muted); font-family: var(--font-mono); letter-spacing: 1px; }
+  .sql-editor {
+    width: 100%; background: transparent; border: none; outline: none;
+    color: var(--green); font-family: var(--font-mono); font-size: 13px;
+    padding: 14px 16px; min-height: 100px; resize: vertical;
+    line-height: 1.7;
+  }
+  .run-btn {
+    background: var(--green); color: #000; border: none; cursor: pointer;
+    padding: 8px 18px; border-radius: 6px; font-size: 12px; font-weight: 700;
+    font-family: var(--font-display); transition: all 0.2s;
+  }
+  .run-btn:hover { background: #0ea172; }
+  .sql-output {
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden; min-height: 80px;
+  }
+  .output-header {
+    padding: 8px 12px; border-bottom: 1px solid var(--border);
+    font-size: 10px; color: var(--muted); font-family: var(--font-mono);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .output-status { font-size: 10px; font-family: var(--font-mono); }
+  .output-status.ok { color: var(--green); }
+  .output-status.err { color: var(--red); }
+  .output-table-wrap { overflow-x: auto; padding: 0; }
+  .output-table {
+    width: 100%; border-collapse: collapse;
+    font-family: var(--font-mono); font-size: 11px;
+  }
+  .output-table th {
+    padding: 8px 12px; background: var(--surface2);
+    text-align: left; color: var(--accent); font-weight: 700;
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  .output-table td {
+    padding: 7px 12px; border-bottom: 1px solid var(--border);
+    color: var(--text); white-space: nowrap;
+  }
+  .output-table tr:hover td { background: var(--surface2); }
+  .output-msg { padding: 16px; font-size: 12px; font-family: var(--font-mono); }
+  .output-msg.err { color: var(--red); }
+  .output-msg.ok { color: var(--green); }
+  .sample-queries { margin-top: 16px; }
+  .sq-title { font-size: 11px; color: var(--muted); margin-bottom: 8px; font-family: var(--font-mono); letter-spacing: 1px; }
+  .sq-chip {
+    display: inline-block; margin: 3px; padding: 5px 10px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 5px; font-size: 11px; font-family: var(--font-mono);
+    color: var(--muted); cursor: pointer; transition: all 0.2s;
+  }
+  .sq-chip:hover { border-color: var(--accent); color: var(--accent); }
+  .schema-info { margin-top: 16px; }
+  .schema-title { font-size: 11px; color: var(--muted); margin-bottom: 8px; font-family: var(--font-mono); letter-spacing: 1px; }
+  .schema-table { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 10px; }
+  .schema-tname { padding: 7px 12px; font-size: 11px; font-weight: 700; color: var(--accent); font-family: var(--font-mono); border-bottom: 1px solid var(--border); }
+  .schema-col { padding: 4px 12px; font-size: 11px; font-family: var(--font-mono); color: var(--muted); }
+  .schema-col span { color: var(--yellow); }
+
+  /* QUIZ */
+  .quiz-wrap { padding: 16px; }
+  .quiz-header { margin-bottom: 16px; }
+  .quiz-title { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+  .quiz-meta { font-size: 12px; color: var(--muted); font-family: var(--font-mono); }
+  .quiz-progress { display: flex; gap: 4px; margin: 12px 0; flex-wrap: wrap; }
+  .qp-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--surface3);
+  }
+  .qp-dot.correct { background: var(--green); }
+  .qp-dot.wrong { background: var(--red); }
+  .qp-dot.current { background: var(--accent); }
+  .question-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px; margin-bottom: 12px;
+  }
+  .q-num { font-size: 10px; color: var(--muted); font-family: var(--font-mono); margin-bottom: 8px; }
+  .q-text { font-size: 14px; font-weight: 600; line-height: 1.6; margin-bottom: 14px; }
+  .q-code {
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 6px; padding: 10px 12px;
+    font-family: var(--font-mono); font-size: 12px; color: var(--green);
+    margin-bottom: 14px; line-height: 1.6;
+  }
+  .option-btn {
+    width: 100%; text-align: left; padding: 12px 14px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; cursor: pointer; margin-bottom: 6px;
+    font-size: 13px; font-family: var(--font-display); color: var(--text);
+    transition: all 0.2s; display: flex; gap: 10px; align-items: center;
+  }
+  .option-btn:hover:not(:disabled) { border-color: var(--accent); }
+  .option-btn.correct { background: rgba(16,185,129,0.12); border-color: var(--green); color: var(--green); }
+  .option-btn.wrong { background: rgba(239,68,68,0.12); border-color: var(--red); color: var(--red); }
+  .option-btn.reveal { background: rgba(16,185,129,0.06); border-color: var(--green); color: var(--green); }
+  .opt-label { font-weight: 700; font-family: var(--font-mono); font-size: 11px; min-width: 18px; }
+  .explain-box {
+    background: var(--surface3); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 14px;
+    font-size: 12px; line-height: 1.7; color: var(--muted);
+    margin-top: 10px;
+  }
+  .explain-box strong { color: var(--text); }
+  .quiz-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .qa-btn {
+    flex: 1; padding: 12px; border-radius: 8px; cursor: pointer;
+    font-size: 13px; font-weight: 600; font-family: var(--font-display);
+    border: 1px solid var(--accent); transition: all 0.2s;
+  }
+  .qa-btn.primary { background: var(--accent); color: #000; }
+  .qa-btn.secondary { background: transparent; color: var(--accent); }
+  .quiz-result {
+    text-align: center; padding: 40px 16px;
+  }
+  .result-score { font-size: 48px; font-weight: 800; color: var(--accent); }
+  .result-label { font-size: 14px; color: var(--muted); margin-top: 4px; }
+  .result-emoji { font-size: 40px; margin-bottom: 12px; }
+
+  /* SCENARIOS */
+  .scenarios { padding: 16px; }
+  .sc-title { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+  .sc-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+  .sc-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; margin-bottom: 10px; overflow: hidden;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .sc-card:hover { border-color: var(--accent); }
+  .sc-card-header {
+    padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .sc-card-title { font-size: 13px; font-weight: 700; }
+  .sc-card-meta { font-size: 10px; color: var(--muted); margin-top: 3px; font-family: var(--font-mono); }
+  .sc-badge {
+    padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 700;
+    font-family: var(--font-mono);
+  }
+  .sc-badge.high { background: rgba(239,68,68,0.15); color: var(--red); }
+  .sc-badge.medium { background: rgba(245,158,11,0.15); color: var(--yellow); }
+  .sc-badge.low { background: rgba(16,185,129,0.15); color: var(--green); }
+  .sc-body { padding: 0 16px 16px; display: none; border-top: 1px solid var(--border); }
+  .sc-body.open { display: block; padding-top: 14px; }
+  .sc-step { display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start; }
+  .sc-step-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--accent); color: #000; font-size: 10px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    font-family: var(--font-mono);
+  }
+  .sc-step-text { font-size: 12px; line-height: 1.6; color: var(--muted); }
+
+  /* BOOKMARKS */
+  .bookmarks { padding: 16px; }
+  .bm-title { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+  .bm-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+  .bm-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px; margin-bottom: 8px;
+    cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+    transition: all 0.2s;
+  }
+  .bm-item:hover { border-color: var(--accent); }
+  .bm-name { font-size: 13px; font-weight: 600; }
+  .bm-module { font-size: 11px; color: var(--muted); margin-top: 3px; font-family: var(--font-mono); }
+  .bm-remove { color: var(--muted); cursor: pointer; padding: 4px; font-size: 16px; }
+  .bm-remove:hover { color: var(--red); }
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-text { font-size: 14px; margin-bottom: 6px; }
+  .empty-sub { font-size: 12px; }
+
+  /* DAILY CHALLENGE */
+  .daily { padding: 16px; }
+  .daily-title { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+  .daily-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+  .daily-card {
+    background: linear-gradient(135deg, var(--surface) 0%, rgba(124,58,237,0.1) 100%);
+    border: 1px solid var(--accent2); border-radius: 14px; padding: 18px;
+    margin-bottom: 16px; position: relative; overflow: hidden;
+  }
+  .daily-card::after {
+    content: '⚡'; position: absolute; right: 16px; top: 16px;
+    font-size: 32px; opacity: 0.15;
+  }
+  .daily-label { font-size: 10px; color: var(--accent2); font-family: var(--font-mono); letter-spacing: 2px; margin-bottom: 8px; font-weight: 700; }
+  .daily-q { font-size: 15px; font-weight: 700; line-height: 1.6; margin-bottom: 10px; }
+  .daily-hint { font-size: 12px; color: var(--muted); }
+  .reveal-btn {
+    background: var(--accent2); color: #fff; border: none; cursor: pointer;
+    padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600;
+    font-family: var(--font-display); transition: all 0.2s; margin-top: 14px;
+  }
+  .reveal-btn:hover { background: #6d28d9; }
+  .daily-answer {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px; margin-top: 10px; display: none;
+  }
+  .daily-answer.show { display: block; }
+  .interview-section { margin-top: 16px; }
+  .interview-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; margin-bottom: 8px; overflow: hidden;
+  }
+  .interview-q {
+    padding: 12px 14px; display: flex; justify-content: space-between;
+    align-items: center; cursor: pointer; font-size: 13px; font-weight: 600;
+  }
+  .interview-a {
+    padding: 0 14px 12px; font-size: 12px; color: var(--muted); line-height: 1.7; display: none;
+  }
+  .interview-a.show { display: block; }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--surface); border: 1px solid var(--accent);
+    border-radius: 8px; padding: 10px 18px; font-size: 12px;
+    font-family: var(--font-mono); color: var(--accent);
+    z-index: 999; opacity: 0; transition: opacity 0.3s;
+    pointer-events: none; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+
+  /* CHIP */
+  .chip {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 10px; font-weight: 700; font-family: var(--font-mono);
+  }
+
+  @media (max-width: 400px) {
+    .modules-grid { grid-template-columns: 1fr; }
+    .hero-title { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <span class="logo">PG<span>Learn</span></span>
+  <div class="search-wrap">
+    <input type="text" id="searchInput" placeholder="Search lessons…" oninput="handleSearch(this.value)">
+  </div>
+  <button class="hbtn" id="bmBtn" onclick="showView('bookmarks')" title="Bookmarks">🔖</button>
+</div>
+
+<!-- NAV TABS -->
+<div class="nav-tabs">
+  <div class="ntab active" onclick="showView('home'); setActiveTab(this)">🏠 Home</div>
+  <div class="ntab" onclick="showView('playground'); setActiveTab(this)">💻 SQL Lab</div>
+  <div class="ntab" onclick="showView('quiz-select'); setActiveTab(this)">❓ Quiz</div>
+  <div class="ntab" onclick="showView('scenarios'); setActiveTab(this)">🔥 Scenarios</div>
+  <div class="ntab" onclick="showView('daily'); setActiveTab(this)">⚡ Daily</div>
+</div>
+
+<!-- ═══════════ HOME VIEW ═══════════ -->
+<div class="view active" id="view-home">
+  <div class="home-hero">
+    <div class="hero-title">PostgreSQL<br>Mastery Path</div>
+    <div class="hero-sub">From Oracle DBA to PostgreSQL Expert — offline, structured, production-ready</div>
+    <div class="stats-row">
+      <div class="stat-pill"><strong id="totalLessons">0</strong> Lessons</div>
+      <div class="stat-pill"><strong id="doneLessons">0</strong> Done</div>
+      <div class="stat-pill"><strong id="totalBookmarks">0</strong> Saved</div>
+      <div class="stat-pill"><strong>100%</strong> Offline</div>
+    </div>
+  </div>
+  <div class="progress-section">
+    <div class="progress-label">
+      <span>Overall Progress</span>
+      <span id="progressPct">0%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+  <div class="modules-grid" id="modulesGrid"></div>
+</div>
+
+<!-- ═══════════ LESSON LIST VIEW ═══════════ -->
+<div class="view" id="view-lessonlist">
+  <div class="lesson-header">
+    <button class="back-btn" onclick="showView('home'); setActiveTab(document.querySelector('.ntab'))">← Back to Modules</button>
+    <div class="lh-title" id="llTitle"></div>
+    <div class="lh-desc" id="llDesc"></div>
+  </div>
+  <div id="lessonListBody"></div>
+</div>
+
+<!-- ═══════════ LESSON CONTENT VIEW ═══════════ -->
+<div class="view" id="view-lesson">
+  <div class="lesson-content">
+    <div class="lc-breadcrumb" id="lcBreadcrumb"></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+      <div class="lc-title" id="lcTitle"></div>
+      <button id="lcBmBtn" onclick="toggleCurrentBookmark()" style="background:none;border:none;cursor:pointer;font-size:22px;padding:4px;">🏷️</button>
+    </div>
+    <div class="lc-summary" id="lcSummary"></div>
+    <div class="ctabs">
+      <button class="ctab active" onclick="showCtab('notes',this)">📝 Notes</button>
+      <button class="ctab" onclick="showCtab('keypoints',this)">⚡ Key Points</button>
+      <button class="ctab" onclick="showCtab('sql',this)">💻 SQL</button>
+    </div>
+    <div id="ctab-notes"></div>
+    <div id="ctab-keypoints" style="display:none"></div>
+    <div id="ctab-sql" style="display:none"></div>
+  </div>
+  <div class="lesson-nav">
+    <button class="nav-btn" id="prevLessonBtn" onclick="navigateLesson(-1)">← Prev</button>
+    <button class="nav-btn" id="markDoneBtn" onclick="markDone()">✓ Mark Done</button>
+    <button class="nav-btn primary" id="nextLessonBtn" onclick="navigateLesson(1)">Next →</button>
+  </div>
+</div>
+
+<!-- ═══════════ SQL PLAYGROUND VIEW ═══════════ -->
+<div class="view" id="view-playground">
+  <div class="playground">
+    <div class="pg-title">💻 SQL Lab</div>
+    <div class="pg-sub">Simulated PostgreSQL environment — write queries, see results instantly</div>
+
+    <div class="dataset-select">
+      <div class="sq-title" style="width:100%;margin-bottom:4px;">ACTIVE DATASET →</div>
+      <button class="ds-btn active" onclick="setDataset('hr',this)">👥 HR / Employees</button>
+      <button class="ds-btn" onclick="setDataset('ecommerce',this)">🛒 E-Commerce</button>
+      <button class="ds-btn" onclick="setDataset('logs',this)">📋 System Logs</button>
+    </div>
+
+    <div class="sql-editor-wrap">
+      <div class="sql-editor-header">
+        <span class="sql-label">SQL EDITOR</span>
+        <button class="run-btn" onclick="runSQL()">▶ Run Query</button>
+      </div>
+      <textarea class="sql-editor" id="sqlEditor" placeholder="-- Write your SQL here&#10;SELECT * FROM employees LIMIT 5;"></textarea>
+    </div>
+
+    <div class="sql-output">
+      <div class="output-header">
+        <span>OUTPUT</span>
+        <span class="output-status" id="outputStatus"></span>
+      </div>
+      <div id="outputBody">
+        <div class="output-msg ok">-- Run a query to see results</div>
+      </div>
+    </div>
+
+    <div class="sample-queries">
+      <div class="sq-title">QUICK QUERIES →</div>
+      <div id="sampleQueriesWrap"></div>
+    </div>
+
+    <div class="schema-info">
+      <div class="schema-title">SCHEMA →</div>
+      <div id="schemaInfoWrap"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ QUIZ SELECT VIEW ═══════════ -->
+<div class="view" id="view-quiz-select">
+  <div class="quiz-wrap">
+    <div class="quiz-title">❓ Quiz Mode</div>
+    <div class="pg-sub">Test your knowledge — instant feedback with explanations</div>
+    <div id="quizModuleList"></div>
+  </div>
+</div>
+
+<!-- ═══════════ QUIZ VIEW ═══════════ -->
+<div class="view" id="view-quiz">
+  <div class="quiz-wrap">
+    <div class="quiz-header">
+      <button class="back-btn" onclick="showView('quiz-select')">← All Quizzes</button>
+      <div class="quiz-title" id="quizTitle"></div>
+      <div class="quiz-meta" id="quizMeta"></div>
+      <div class="quiz-progress" id="quizProgress"></div>
+    </div>
+    <div id="quizBody"></div>
+    <div class="quiz-actions" id="quizActions"></div>
+  </div>
+</div>
+
+<!-- ═══════════ SCENARIOS VIEW ═══════════ -->
+<div class="view" id="view-scenarios">
+  <div class="scenarios">
+    <div class="sc-title">🔥 DBA Scenarios</div>
+    <div class="sc-sub">Real-world production situations — how to diagnose and fix</div>
+    <div id="scenariosBody"></div>
+  </div>
+</div>
+
+<!-- ═══════════ DAILY / INTERVIEW VIEW ═══════════ -->
+<div class="view" id="view-daily">
+  <div class="daily">
+    <div class="daily-title">⚡ Daily Challenge</div>
+    <div class="daily-sub">One question per day + interview prep</div>
+
+    <div class="daily-card">
+      <div class="daily-label">TODAY'S CHALLENGE</div>
+      <div class="daily-q" id="dailyQ"></div>
+      <div class="daily-hint" id="dailyHint"></div>
+      <button class="reveal-btn" onclick="revealDaily()">Reveal Answer</button>
+      <div class="daily-answer" id="dailyAnswer"></div>
+    </div>
+
+    <div class="interview-section">
+      <div class="sq-title" style="margin-bottom:10px;">INTERVIEW QUESTIONS →</div>
+      <div id="interviewList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ BOOKMARKS VIEW ═══════════ -->
+<div class="view" id="view-bookmarks">
+  <div class="bookmarks">
+    <div class="bm-title">🔖 Bookmarks</div>
+    <div class="bm-sub">Your saved lessons for quick revision</div>
+    <div id="bookmarksList"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// DATA — ALL MODULES, LESSONS, QUIZZES, SCENARIOS
+// ═══════════════════════════════════════════════════════
+const MODULES = [
+  {
+    id: "basics",
+    icon: "🏗️",
+    title: "Basics & Architecture",
+    desc: "PG internals, process model, Oracle comparisons",
+    color: "#00D4FF",
+    lessons: [
+      {
+        id: "b1",
+        title: "What is PostgreSQL?",
+        tags: ["intro"],
+        summary: "Open-source, ACID-compliant ORDBMS with 35+ years of active development. Community-driven, extensible, and production-proven at massive scale.",
+        keyPoints: [
+          "MVCC-based — readers never block writers",
+          "Default port: 5432 | Default superuser: postgres",
+          "Config files: postgresql.conf, pg_hba.conf, pg_ident.conf",
+          "No schema specified = PUBLIC schema by default",
+          "Identifiers are case-insensitive unless double-quoted",
+          "Supports JSON, arrays, custom types, extensions",
+          "ACID compliant: Atomicity, Consistency, Isolation, Durability",
+        ],
+        notes: `PostgreSQL is a <strong>process-per-connection</strong> database. The <strong>postmaster</strong> daemon spawns a new OS process for every client connection.
+
+Unlike Oracle, there is no concept of a "database instance" — each PostgreSQL database is just a directory under the data folder.
+
+Key config locations:
+• <code>$PGDATA/postgresql.conf</code> — main config
+• <code>$PGDATA/pg_hba.conf</code> — client auth rules
+• <code>$PGDATA/pg_ident.conf</code> — OS user mapping`,
+        sql: `-- Check version and build info
+SELECT version();
+
+-- List all databases
+\\l
+
+-- Connect to a database
+\\c mydb
+
+-- List tables in current schema
+\\dt
+
+-- Show current user and database
+SELECT current_user, current_database();
+
+-- Check all config settings
+SELECT name, setting, unit, short_desc
+FROM pg_settings WHERE name LIKE '%buffer%';`,
+        diagram: `Postmaster (daemon)
+  ├── Backend Process 1   ← Client connection 1
+  ├── Backend Process 2   ← Client connection 2
+  ├── bgwriter            ← flushes dirty pages
+  ├── checkpointer        ← manages checkpoints
+  ├── autovacuum launcher ← spawns autovacuum workers
+  ├── WAL writer          ← flushes WAL buffers
+  └── stats collector     ← tracks activity stats`,
+        note: "🔥 Never use the 'postgres' superuser for application connections. Create a dedicated role with minimal privileges for each application.",
+      },
+      {
+        id: "b2",
+        title: "Oracle vs PostgreSQL",
+        tags: ["migration"],
+        summary: "Side-by-side comparison of the most critical Oracle concepts and their PostgreSQL equivalents.",
+        keyPoints: [
+          "Oracle DUAL → PG: SELECT 1 (no dummy table needed)",
+          "Oracle NVL() → PG: COALESCE()",
+          "Oracle SYSDATE → PG: NOW() or CURRENT_TIMESTAMP",
+          "Oracle ROWNUM → PG: ROW_NUMBER() OVER() or LIMIT",
+          "Oracle VARCHAR2 → PG: TEXT (preferred) or VARCHAR",
+          "Oracle NUMBER(p,s) → PG: NUMERIC(p,s)",
+          "Oracle DBMS_OUTPUT.PUT_LINE → PG: RAISE NOTICE",
+          "Oracle DB Links → PG: Foreign Data Wrappers (FDW)",
+          "Oracle Synonyms → PG: no direct equiv — use search_path",
+          "Oracle CONNECT BY → PG: Recursive CTEs (WITH RECURSIVE)",
+        ],
+        notes: `The biggest conceptual shifts when moving from Oracle to PostgreSQL:
+
+<strong>1. Schemas ≠ Users</strong><br>In Oracle, each user IS a schema. In PostgreSQL, schemas are namespaces inside a database. Multiple schemas can exist, and the same user can access all of them.
+
+<strong>2. No UNDO tablespace</strong><br>Oracle stores old row versions in UNDO. PostgreSQL stores them IN THE TABLE itself (MVCC tuple versioning). This is why VACUUM exists.
+
+<strong>3. Transactional DDL</strong><br>Oracle auto-commits DDL. In PostgreSQL, you can BEGIN; CREATE TABLE; ROLLBACK; — the table disappears!
+
+<strong>4. Sequences work differently</strong><br>Oracle: MY_SEQ.NEXTVAL. PostgreSQL: nextval('my_seq')`,
+        sql: `-- Oracle ROWNUM → PostgreSQL
+SELECT * FROM employees LIMIT 10;          -- first 10
+SELECT * FROM employees OFFSET 10 LIMIT 5; -- rows 11-15
+
+-- Oracle NVL → PostgreSQL
+SELECT COALESCE(salary, 0) FROM employees;
+
+-- Oracle SYSDATE variants
+SELECT NOW();                -- current timestamp with tz
+SELECT CURRENT_DATE;         -- date only
+SELECT CURRENT_TIMESTAMP;    -- same as NOW()
+SELECT LOCALTIMESTAMP;       -- without timezone
+
+-- Oracle CONNECT BY → Recursive CTE
+WITH RECURSIVE org_tree AS (
+  SELECT id, name, manager_id, 0 AS depth
+  FROM employees WHERE manager_id IS NULL
+  UNION ALL
+  SELECT e.id, e.name, e.manager_id, t.depth + 1
+  FROM employees e JOIN org_tree t ON e.manager_id = t.id
+)
+SELECT * FROM org_tree ORDER BY depth;
+
+-- Oracle DECODE → CASE
+SELECT name,
+  CASE dept_id WHEN 1 THEN 'Engineering'
+               WHEN 2 THEN 'Sales'
+               ELSE 'Other' END AS dept_name
+FROM employees;`,
+        note: "🔥 In PostgreSQL, + is NOT string concatenation — it's arithmetic. Use || or CONCAT(). 'hello' + 'world' throws an error in PG.",
+      },
+    ],
+  },
+  {
+    id: "storage",
+    icon: "🧱",
+    title: "Storage & MVCC",
+    desc: "Pages, heap files, TOAST, tuple versioning",
+    color: "#8B5CF6",
+    lessons: [
+      {
+        id: "s1",
+        title: "Pages, Heap & TOAST",
+        tags: ["internals"],
+        summary: "PostgreSQL stores all data in 8KB fixed-size pages. Large column values are compressed and stored in TOAST tables automatically.",
+        keyPoints: [
+          "Page size: 8192 bytes (8KB), fixed at compile time",
+          "Each page: 24B header + item pointers + data + special area",
+          "Tuple header: 23 bytes per row (t_xmin, t_xmax, ctid, etc.)",
+          "ctid: physical row location (page_no, tuple_idx) — NOT stable",
+          "TOAST triggers when value exceeds ~2KB",
+          "TOAST strategies: PLAIN, EXTERNAL, EXTENDED (default), MAIN",
+          "Each table gets a corresponding pg_toast.pg_toast_NNNN table",
+          "Relation files stored at: $PGDATA/base/<db_oid>/<table_oid>",
+          "Files split at 1GB segments automatically",
+          "FSM: Free Space Map tracks reusable space per page",
+          "VM: Visibility Map marks all-visible pages (helps VACUUM)",
+        ],
+        notes: `<strong>Page Layout:</strong><br>
+Every 8KB page contains:<br>
+• <strong>PageHeaderData</strong> (24 bytes): LSN, checksum, flags, free space pointers<br>
+• <strong>ItemId array</strong>: 4-byte pointers to each tuple<br>
+• <strong>Free space</strong>: gap between ItemId array and tuples<br>
+• <strong>Tuples</strong>: actual row data, stored from bottom up<br>
+• <strong>Special area</strong>: used by index pages (B-tree, etc.)
+
+<strong>TOAST (The Oversized-Attribute Storage Technique):</strong><br>
+When a column value exceeds ~2KB (¼ of a page), PostgreSQL automatically compresses it and/or moves it to a separate TOAST table, storing only a pointer in the main table.`,
+        sql: `-- Find physical location of a row
+SELECT ctid, id, name FROM employees LIMIT 5;
+-- ctid = (page_number, tuple_index_in_page)
+-- e.g. (0,1) = first tuple on page 0
+
+-- Table file size breakdown
+SELECT
+  pg_size_pretty(pg_relation_size('employees')) AS table_size,
+  pg_size_pretty(pg_indexes_size('employees')) AS indexes_size,
+  pg_size_pretty(pg_total_relation_size('employees')) AS total_size;
+
+-- Check TOAST tables
+SELECT relname, pg_size_pretty(pg_total_relation_size(oid))
+FROM pg_class
+WHERE relkind = 't'  -- 't' = TOAST table
+ORDER BY pg_total_relation_size(oid) DESC LIMIT 10;
+
+-- Page inspection (requires pageinspect extension)
+CREATE EXTENSION IF NOT EXISTS pageinspect;
+SELECT lp, lp_off, lp_len, t_xmin, t_xmax, t_ctid
+FROM heap_page_items(get_raw_page('employees', 0)) LIMIT 5;`,
+        diagram: `8KB Page Structure:
+┌─────────────────────────────────────┐
+│  PageHeaderData (24 bytes)           │
+│  LSN | checksum | flags | pd_lower  │
+├─────────────────────────────────────┤
+│  ItemId[1] | ItemId[2] | ...        │  ← 4 bytes each
+├─────────────────────────────────────┤
+│                                      │
+│         FREE SPACE                   │
+│                                      │
+├─────────────────────────────────────┤
+│  Tuple N  │  ...  │  Tuple 2  │ T1  │  ← stored bottom-up
+└─────────────────────────────────────┘`,
+        note: "🔥 ctid changes after VACUUM FULL or CLUSTER — never use ctid as a persistent row identifier. Always use a proper PRIMARY KEY.",
+      },
+      {
+        id: "s2",
+        title: "MVCC — Multi-Version Concurrency",
+        tags: ["internals","concurrency"],
+        summary: "MVCC allows concurrent reads and writes without blocking. Every row stores transaction IDs that determine visibility. Old versions accumulate as dead tuples.",
+        keyPoints: [
+          "Every tuple stores: t_xmin (creator XID) and t_xmax (deleter XID)",
+          "UPDATE = INSERT new version + mark old t_xmax",
+          "DELETE = only marks t_xmax (row stays on disk!)",
+          "Dead tuples accumulate until VACUUM removes them",
+          "Transaction XID: 32-bit integer (wraps at ~2 billion!)",
+          "Snapshot isolation: each query sees rows committed before its snapshot",
+          "READ COMMITTED: snapshot per statement (default isolation)",
+          "REPEATABLE READ: snapshot per transaction",
+          "SERIALIZABLE: full SSI — detects all serialization anomalies",
+          "No UNDO logs — old versions live inside the heap",
+        ],
+        notes: `<strong>Why VACUUM exists (Oracle DBAs pay attention!):</strong><br>
+Oracle stores old row versions in an <em>UNDO tablespace</em> — separate from the table. When no longer needed, UNDO space is simply reclaimed.
+
+PostgreSQL stores ALL versions of a row IN THE TABLE FILE. An UPDATE creates a new physical tuple; the old tuple stays with its t_xmax set. These "dead tuples" accumulate over time, causing:
+• <strong>Table bloat</strong>: disk wasted on dead tuples
+• <strong>Index bloat</strong>: indexes point to dead tuples
+• <strong>Slower queries</strong>: more pages to scan
+
+VACUUM scans the table, identifies dead tuples (where t_xmax is a committed transaction that all active snapshots can see past), and marks their space as reusable.
+
+<strong>XID Wraparound:</strong><br>
+Transaction IDs are 32-bit. After ~2 billion transactions, they wrap around. PostgreSQL's VACUUM FREEZE prevents this by replacing old XID references with a special "frozen" marker.`,
+        sql: `-- Check current transaction ID
+SELECT txid_current();
+
+-- See a transaction in action
+BEGIN;
+SELECT txid_current(); -- gets an XID
+UPDATE employees SET salary = salary * 1.1 WHERE id = 1;
+-- Old tuple still exists with t_xmax set to this XID
+COMMIT;
+
+-- Table bloat: dead tuple count
+SELECT schemaname, relname, n_live_tup, n_dead_tup,
+  ROUND(n_dead_tup::numeric / NULLIF(n_live_tup + n_dead_tup, 0) * 100, 1)
+  AS dead_pct,
+  last_autovacuum, last_vacuum
+FROM pg_stat_user_tables
+ORDER BY n_dead_tup DESC LIMIT 10;
+
+-- XID age — monitor for wraparound!
+SELECT datname, age(datfrozenxid) AS xid_age,
+  2147483647 - age(datfrozenxid) AS xids_remaining
+FROM pg_database
+ORDER BY xid_age DESC;
+-- Alert if xids_remaining < 200,000,000!`,
+        note: "🔥 If age(datfrozenxid) approaches 2 billion, PostgreSQL will force the database to shutdown to prevent data corruption. This is called XID wraparound — monitor it daily!",
+      },
+    ],
+  },
+  {
+    id: "sql",
+    icon: "💻",
+    title: "SQL Development",
+    desc: "DDL, DML, joins, CTEs, functions, PL/pgSQL",
+    color: "#10B981",
+    lessons: [
+      {
+        id: "sql1",
+        title: "DDL & Constraints",
+        tags: ["DDL"],
+        summary: "PostgreSQL DDL is transactional — unlike Oracle, you can roll back a CREATE TABLE. Schemas, constraints, and IDENTITY columns are key differences.",
+        keyPoints: [
+          "Schemas: logical namespaces inside a database (≠ Oracle users)",
+          "search_path: controls schema lookup order",
+          "Transactional DDL: CREATE/DROP/ALTER can be rolled back!",
+          "BIGINT GENERATED ALWAYS AS IDENTITY — modern PK (not SERIAL)",
+          "TEXT preferred over VARCHAR in PostgreSQL",
+          "ON DELETE CASCADE / SET NULL / RESTRICT / SET DEFAULT",
+          "DEFERRABLE INITIALLY DEFERRED: check FK at COMMIT, not per-row",
+          "UNLOGGED tables: no WAL, very fast inserts, not crash-safe",
+          "TEMPORARY tables: session-scoped, auto-dropped at disconnect",
+        ],
+        notes: `<strong>Schema vs User (critical Oracle distinction):</strong><br>
+In Oracle: CREATE USER elisha → creates schema 'elisha'. Everything belongs to the user.<br>
+In PostgreSQL: CREATE USER elisha; CREATE SCHEMA app; — they're separate. A user can access many schemas; a schema belongs to no user specifically.
+
+<strong>SERIAL vs IDENTITY:</strong><br>
+SERIAL is a shorthand that creates a hidden sequence. IDENTITY (PostgreSQL 10+) is the SQL-standard way and is preferred. Use BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY.
+
+<strong>Transactional DDL — huge win:</strong><br>
+BEGIN;<br>
+ALTER TABLE employees ADD COLUMN test_col TEXT;<br>
+-- oops, wrong column<br>
+ROLLBACK; -- column never existed!`,
+        sql: `-- Schema management
+CREATE SCHEMA app;
+SET search_path TO app, public;
+SHOW search_path;
+
+-- Modern table creation
+CREATE TABLE employees (
+  id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  emp_code    VARCHAR(20) UNIQUE NOT NULL,
+  name        TEXT NOT NULL,
+  dept_id     INTEGER REFERENCES departments(id) ON DELETE SET NULL,
+  salary      NUMERIC(12,2) CHECK (salary > 0),
+  hire_date   DATE DEFAULT CURRENT_DATE,
+  is_active   BOOLEAN DEFAULT TRUE,
+  metadata    JSONB DEFAULT '{}'
+);
+
+-- Transactional DDL (test safely)
+BEGIN;
+  ALTER TABLE employees ADD COLUMN test_col TEXT;
+  -- test something...
+ROLLBACK; -- column is gone, no damage done
+
+-- Instant default (PG 11+, no table rewrite!)
+ALTER TABLE employees ADD COLUMN notes TEXT DEFAULT 'N/A';
+
+-- Partial unique index (conditional uniqueness)
+CREATE UNIQUE INDEX idx_unique_active_code
+ON employees(emp_code) WHERE is_active = TRUE;`,
+        note: "🔥 PostgreSQL 11+ can add a column with a DEFAULT value without rewriting the entire table — it just stores the default in the catalog. On older versions, this causes a full table rewrite!",
+      },
+      {
+        id: "sql2",
+        title: "Advanced DML & CTEs",
+        tags: ["DML","CTE"],
+        summary: "PostgreSQL extends SQL with UPSERT, RETURNING, LATERAL joins, DISTINCT ON, and writable CTEs — powerful patterns for production applications.",
+        keyPoints: [
+          "INSERT ... ON CONFLICT DO UPDATE — PostgreSQL's UPSERT",
+          "RETURNING — get back inserted/updated rows immediately",
+          "COPY — bulk load, 10-100x faster than INSERT",
+          "DISTINCT ON (col) — get first row per group (PG-specific)",
+          "LATERAL JOIN — correlated subquery in FROM clause",
+          "FILTER — conditional aggregation without CASE",
+          "Writable CTE — UPDATE/DELETE inside WITH clause",
+          "MERGE (PG 15+) — SQL-standard upsert",
+        ],
+        notes: `<strong>UPSERT pattern:</strong><br>
+The ON CONFLICT clause handles the case where a unique constraint would be violated. EXCLUDED refers to the row that was proposed for insertion.
+
+<strong>DISTINCT ON — PostgreSQL gold:</strong><br>
+Get the first row per group without a complex subquery. ORDER BY must start with the DISTINCT ON columns.
+
+<strong>Writable CTEs:</strong><br>
+You can UPDATE, INSERT, or DELETE inside a CTE and return results. This enables atomic multi-step operations in a single statement.`,
+        sql: `-- UPSERT (Insert or Update)
+INSERT INTO employees (emp_code, name, salary)
+VALUES ('E001', 'Elisha Kumar', 95000)
+ON CONFLICT (emp_code)
+DO UPDATE SET
+  salary = EXCLUDED.salary,
+  name = EXCLUDED.name
+RETURNING id, emp_code, salary;
+
+-- DISTINCT ON: highest salary per department
+SELECT DISTINCT ON (dept_id)
+  dept_id, name, salary
+FROM employees
+ORDER BY dept_id, salary DESC;
+
+-- LATERAL JOIN: last order per employee
+SELECT e.name, o.order_date, o.amount
+FROM employees e
+LEFT JOIN LATERAL (
+  SELECT order_date, amount
+  FROM orders WHERE emp_id = e.id
+  ORDER BY order_date DESC LIMIT 1
+) o ON true;
+
+-- FILTER: conditional aggregation
+SELECT dept_id,
+  COUNT(*) AS total,
+  COUNT(*) FILTER (WHERE is_active) AS active_count,
+  AVG(salary) FILTER (WHERE salary > 50000) AS senior_avg
+FROM employees GROUP BY dept_id;
+
+-- Writable CTE: atomic move + log
+WITH moved AS (
+  UPDATE employees SET dept_id = 5
+  WHERE dept_id = 3 AND salary > 80000
+  RETURNING id, name
+)
+INSERT INTO audit_log(emp_id, action, action_time)
+SELECT id, 'DEPT_TRANSFER', NOW() FROM moved;`,
+        note: "🔥 Use COPY for bulk loads: COPY employees FROM '/path/to/file.csv' CSV HEADER; — it bypasses WAL minimally and is 10-100x faster than row-by-row INSERT.",
+      },
+      {
+        id: "sql3",
+        title: "PL/pgSQL Functions",
+        tags: ["plpgsql","functions"],
+        summary: "PL/pgSQL is PostgreSQL's procedural language, similar to Oracle's PL/SQL. Functions, procedures, DO blocks, and exception handling.",
+        keyPoints: [
+          "Functions: always return a value (void, scalar, TABLE, SETOF)",
+          "Procedures (PG 11+): no return value, can COMMIT inside",
+          "DO block: anonymous PL/pgSQL — no persistent object",
+          "$$ dollar quoting: avoids escaping single quotes",
+          "DECLARE: variable declarations, RECORD type",
+          "RAISE NOTICE/WARNING/EXCEPTION for output/errors",
+          "PERFORM: run a query and discard result",
+          "EXECUTE: dynamic SQL (be careful of SQL injection!)",
+          "RETURNS TABLE: return multiple rows from a function",
+          "SECURITY DEFINER: function runs as its owner (like Oracle AUTHID DEFINER)",
+        ],
+        notes: `<strong>Key PL/pgSQL differences from Oracle PL/SQL:</strong><br>
+• Oracle has PACKAGES — PostgreSQL uses schemas to group functions<br>
+• Oracle: v_result := my_func(args); → PG: SELECT my_func(args) INTO v_result;<br>
+• Oracle: EXCEPTION WHEN OTHERS → PG: EXCEPTION WHEN OTHERS THEN<br>
+• Oracle: DBMS_OUTPUT.PUT_LINE → PG: RAISE NOTICE '%', value;<br>
+• Oracle: %TYPE and %ROWTYPE both work in PG too<br>
+• Oracle: PRAGMA AUTONOMOUS_TRANSACTION → PG: use dblink for workaround
+
+<strong>EXECUTE for dynamic SQL:</strong><br>
+Use EXECUTE for dynamic SQL. ALWAYS use the format() function with %L for literals and %I for identifiers — never concatenate user input directly.`,
+        sql: `-- Simple function
+CREATE OR REPLACE FUNCTION get_dept_salary_total(p_dept_id INT)
+RETURNS NUMERIC AS $$
+DECLARE
+  v_total NUMERIC := 0;
+BEGIN
+  SELECT COALESCE(SUM(salary), 0) INTO v_total
+  FROM employees WHERE dept_id = p_dept_id AND is_active;
+
+  RAISE NOTICE 'Dept % total: %', p_dept_id, v_total;
+  RETURN v_total;
+EXCEPTION
+  WHEN OTHERS THEN
+    RAISE EXCEPTION 'Error in get_dept_salary_total: %', SQLERRM;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Table-returning function
+CREATE OR REPLACE FUNCTION get_active_employees(p_dept INT DEFAULT NULL)
+RETURNS TABLE(id BIGINT, name TEXT, salary NUMERIC, hire_date DATE) AS $$
+BEGIN
+  RETURN QUERY
+    SELECT e.id, e.name, e.salary, e.hire_date
+    FROM employees e
+    WHERE (p_dept IS NULL OR e.dept_id = p_dept)
+      AND e.is_active
+    ORDER BY e.salary DESC;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Procedure (PG 11+, can COMMIT)
+CREATE OR REPLACE PROCEDURE archive_old_orders(cutoff_date DATE)
+LANGUAGE plpgsql AS $$
+BEGIN
+  INSERT INTO orders_archive SELECT * FROM orders
+  WHERE order_date < cutoff_date;
+  DELETE FROM orders WHERE order_date < cutoff_date;
+  COMMIT;
+  RAISE NOTICE 'Archived orders before %', cutoff_date;
+END;
+$$;
+
+CALL archive_old_orders('2023-01-01');`,
+        note: "🔥 Use format('%L', user_input) for SQL literals in EXECUTE — it properly quotes and escapes values. Never do EXECUTE 'SELECT ' || user_input — that's SQL injection!",
+      },
+    ],
+  },
+  {
+    id: "perf",
+    icon: "⚡",
+    title: "Performance & Indexing",
+    desc: "Index types, EXPLAIN, VACUUM, query tuning",
+    color: "#F59E0B",
+    lessons: [
+      {
+        id: "p1",
+        title: "Index Types Deep Dive",
+        tags: ["indexing"],
+        summary: "PostgreSQL has 6 index access methods. Picking the right one can mean the difference between 100ms and 0.1ms query time.",
+        keyPoints: [
+          "B-Tree: default, =, <, >, BETWEEN, LIKE 'prefix%'",
+          "Hash: equality only (=), smaller than B-Tree",
+          "GiST: geometric, full-text, range types, PostGIS",
+          "SP-GiST: non-balanced trees (quad, k-d) for specific distributions",
+          "GIN: array, JSONB, full-text — inverted index (multiple keys per row)",
+          "BRIN: block range — huge append-only tables, tiny size",
+          "Partial index: WHERE clause — index only relevant rows",
+          "Expression index: index on function result (e.g. LOWER(email))",
+          "Covering index: INCLUDE — non-key columns to avoid heap fetch",
+          "CREATE INDEX CONCURRENTLY: no table lock — ALWAYS use in production!",
+        ],
+        notes: `<strong>When to use each index type:</strong><br>
+• <strong>B-Tree</strong>: default choice for most columns<br>
+• <strong>GIN</strong>: JSONB queries with @>, ?; array ANY(); full-text search<br>
+• <strong>BRIN</strong>: time-series tables where data naturally ordered by insert time (logs, events)<br>
+• <strong>GiST</strong>: PostGIS geometries, IP ranges (ip4r), full-text (less common)<br>
+• <strong>Partial</strong>: index only active records, recent data, or specific status
+
+<strong>Covering index (INCLUDE):</strong><br>
+If your query only needs dept_id + name + salary, create:<br>
+CREATE INDEX ON employees(dept_id) INCLUDE (name, salary);<br>
+Now queries can be satisfied from the index alone — no heap fetch needed = "Index Only Scan".`,
+        sql: `-- Standard B-Tree
+CREATE INDEX idx_emp_dept ON employees(dept_id);
+
+-- Partial index: only active employees
+CREATE INDEX idx_active_emp ON employees(name)
+WHERE is_active = TRUE;
+-- Only indexes ~20% of rows if 80% are inactive
+
+-- Expression index for case-insensitive search
+CREATE INDEX idx_lower_email ON users(LOWER(email));
+-- Now this query uses the index:
+SELECT * FROM users WHERE LOWER(email) = 'elisha@example.com';
+
+-- Covering index — avoids heap fetch
+CREATE INDEX idx_dept_cover ON employees(dept_id)
+INCLUDE (name, salary);
+-- SELECT name, salary FROM employees WHERE dept_id = 5 → Index Only Scan
+
+-- GIN for JSONB
+CREATE INDEX idx_meta_gin ON orders USING GIN(metadata);
+SELECT * FROM orders WHERE metadata @> '{"status":"paid"}'; -- uses GIN
+
+-- BRIN for time-series (tiny size!)
+CREATE INDEX idx_logs_brin ON system_logs USING BRIN(created_at);
+
+-- CONCURRENT: no lock on production!
+CREATE INDEX CONCURRENTLY idx_emp_name ON employees(name);`,
+        note: "🔥 ALWAYS use CREATE INDEX CONCURRENTLY in production. A regular CREATE INDEX takes ShareLock which blocks all writes. CONCURRENTLY takes longer but only needs weak locks.",
+      },
+      {
+        id: "p2",
+        title: "EXPLAIN & Query Plans",
+        tags: ["performance","explain"],
+        summary: "EXPLAIN ANALYZE is your primary diagnostic tool. Learn to read costs, node types, and spot the difference between plan estimates and actual execution.",
+        keyPoints: [
+          "EXPLAIN: shows estimated plan (does NOT execute)",
+          "EXPLAIN ANALYZE: executes + shows actual vs estimated rows",
+          "EXPLAIN (ANALYZE, BUFFERS): shows shared/local hit/read/dirtied",
+          "Seq Scan: full table scan — OK for small or mostly-read tables",
+          "Index Scan: uses index + heap fetch per row",
+          "Index Only Scan: all data from index (no heap) — best case",
+          "Bitmap Heap Scan: batch index lookups → fewer random I/Os",
+          "Hash Join: build hash table of smaller relation",
+          "Merge Join: sorted input required — good for large sorted data",
+          "Nested Loop: small outer set + indexed inner — fastest when applicable",
+          "Cost format: (startup_cost..total_cost rows=N width=N)",
+        ],
+        notes: `<strong>Reading EXPLAIN output:</strong>
+
+The MOST important thing: compare <strong>estimated rows vs actual rows</strong>. A large difference means stale statistics → run ANALYZE.
+
+<strong>Key things to look for:</strong><br>
+• <strong>actual rows >> rows</strong>: stats stale, run ANALYZE<br>
+• <strong>Seq Scan on large table</strong>: missing index or wrong query<br>
+• <strong>Buffers: read=1000</strong>: reading from disk (slow!)<br>
+• <strong>Buffers: hit=1000</strong>: from shared_buffers (fast!)<br>
+• <strong>Loops: 1000</strong>: Nested Loop running inner node 1000 times<br>
+• <strong>Sort Method: external merge</strong>: spilling to disk, increase work_mem
+
+<strong>Fix stale statistics:</strong><br>
+ANALYZE tablename; — updates stats<br>
+ALTER TABLE t ALTER COLUMN c SET STATISTICS 500; — more detail`,
+        sql: `-- Basic explain
+EXPLAIN SELECT * FROM employees WHERE dept_id = 10;
+
+-- Full diagnostics
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
+SELECT e.name, d.dept_name, SUM(o.amount)
+FROM employees e
+JOIN departments d ON e.dept_id = d.id
+JOIN orders o ON o.emp_id = e.id
+WHERE e.is_active AND o.order_date > NOW() - INTERVAL '90 days'
+GROUP BY e.name, d.dept_name
+ORDER BY 3 DESC;
+
+-- Force/disable nodes for testing ONLY
+SET enable_seqscan = OFF;   -- force index scan
+SET enable_hashjoin = OFF;  -- force merge/nested join
+-- RESET after testing:
+RESET enable_seqscan;
+RESET enable_hashjoin;
+
+-- Spot stale statistics
+SELECT tablename, attname, n_distinct, correlation
+FROM pg_stats WHERE tablename = 'employees';
+
+-- Fix stale statistics
+ANALYZE employees;
+-- Increase stat target for column with many distinct values:
+ALTER TABLE employees ALTER COLUMN dept_id SET STATISTICS 500;
+ANALYZE employees;`,
+        note: "🔥 After EXPLAIN ANALYZE shows a bad plan, don't just SET enable_seqscan=OFF — that's a hack. Fix the root cause: stale stats (ANALYZE), missing index, or query rewrite.",
+      },
+      {
+        id: "p3",
+        title: "VACUUM & Autovacuum",
+        tags: ["maintenance","vacuum"],
+        summary: "VACUUM is the most critical maintenance operation in PostgreSQL. It reclaims dead tuple space, prevents XID wraparound, and keeps the planner statistics fresh.",
+        keyPoints: [
+          "VACUUM: marks dead tuples reusable (space NOT returned to OS)",
+          "VACUUM FULL: rewrites table, returns space to OS (locks table!)",
+          "VACUUM ANALYZE: vacuum + update table statistics",
+          "Autovacuum: automatic background daemon — never disable!",
+          "Trigger condition: threshold + (scale_factor × n_live_tup)",
+          "Default: 50 rows + 20% of table before autovacuum triggers",
+          "VACUUM FREEZE: set t_xmin to 'frozen' to prevent XID wraparound",
+          "autovacuum_vacuum_cost_delay: throttles autovacuum I/O",
+          "Monitor: pg_stat_user_tables (last_autovacuum, n_dead_tup)",
+          "Table-level tuning: ALTER TABLE SET (autovacuum_... = ...)",
+        ],
+        notes: `<strong>Autovacuum trigger threshold (default):</strong><br>
+<code>autovacuum_vacuum_threshold (50) + autovacuum_vacuum_scale_factor (0.2) × n_live_tup</code><br>
+For a 10M row table: 50 + 0.2 × 10,000,000 = 2,000,050 dead tuples needed to trigger!<br>
+→ High-churn tables need per-table overrides with lower scale_factor.
+
+<strong>Signs autovacuum is struggling:</strong><br>
+• n_dead_tup keeps growing<br>
+• last_autovacuum is old/null<br>
+• Table size keeps growing despite no data growth<br>
+• Queries getting slower over time (bloat → more pages to read)
+
+<strong>Never VACUUM FULL on production</strong> unless you have a maintenance window — it takes an exclusive lock and rewrites the entire table.`,
+        sql: `-- Manual vacuum (safe on production)
+VACUUM ANALYZE employees;
+VACUUM VERBOSE employees; -- shows detailed output
+
+-- Check autovacuum health
+SELECT relname, n_live_tup, n_dead_tup,
+  last_vacuum, last_autovacuum,
+  last_analyze, last_autoanalyze,
+  autovacuum_count, autoanalyze_count
+FROM pg_stat_user_tables
+ORDER BY n_dead_tup DESC;
+
+-- Per-table tuning for high-churn tables
+ALTER TABLE orders SET (
+  autovacuum_vacuum_scale_factor = 0.01,  -- trigger at 1% dead
+  autovacuum_vacuum_threshold = 100,       -- or 100 rows
+  autovacuum_analyze_scale_factor = 0.005
+);
+
+-- XID wraparound monitoring (CRITICAL alert if < 200M)
+SELECT datname,
+  age(datfrozenxid) AS xid_age,
+  2147483647 - age(datfrozenxid) AS xids_remaining
+FROM pg_database
+ORDER BY xid_age DESC;
+
+-- Emergency manual freeze
+VACUUM FREEZE employees; -- forces freeze of all old tuples`,
+        note: "🔥 Set up alerting on xids_remaining < 200,000,000. When XID age approaches 2 billion, PostgreSQL puts the DB into read-only mode and then shuts down. This is a production emergency.",
+      },
+    ],
+  },
+  {
+    id: "locks",
+    icon: "🔒",
+    title: "Locks & Concurrency",
+    desc: "Lock hierarchy, deadlocks, blocking queries",
+    color: "#EF4444",
+    lessons: [
+      {
+        id: "l1",
+        title: "Lock Hierarchy",
+        tags: ["locks"],
+        summary: "PostgreSQL has 8 table-level lock modes and row-level locks. Understanding compatibility is essential to avoid accidental contention in production.",
+        keyPoints: [
+          "ACCESS SHARE: SELECT — only conflicts with ACCESS EXCLUSIVE",
+          "ROW SHARE: SELECT FOR UPDATE/SHARE",
+          "ROW EXCLUSIVE: INSERT/UPDATE/DELETE",
+          "SHARE UPDATE EXCLUSIVE: VACUUM, CREATE INDEX CONCURRENTLY",
+          "SHARE: CREATE INDEX (non-concurrent) — blocks writes",
+          "SHARE ROW EXCLUSIVE: used by triggers",
+          "EXCLUSIVE: REFRESH MATERIALIZED VIEW CONCURRENTLY",
+          "ACCESS EXCLUSIVE: ALTER TABLE, DROP, VACUUM FULL — blocks everything",
+          "Row locks: FOR UPDATE (exclusive), FOR SHARE, FOR NO KEY UPDATE, FOR KEY SHARE",
+          "Advisory locks: application-level, explicit acquire/release",
+        ],
+        notes: `<strong>The dangerous lock: ACCESS EXCLUSIVE</strong><br>
+Any ALTER TABLE takes ACCESS EXCLUSIVE — it blocks ALL reads and writes while waiting to acquire the lock, and holds it for the entire duration.
+
+<strong>Lock queue amplification:</strong><br>
+If session A holds ShareLock and session B is waiting for AccessExclusiveLock (ALTER TABLE), ALL subsequent SELECT queries queue behind B even though they would normally be compatible with A!
+
+This is why you see "lock pileups" during schema migrations — a single ALTER TABLE can cause hundreds of queries to pile up.
+
+<strong>Best practice for DDL on busy tables:</strong><br>
+1. Set lock_timeout so the ALTER fails fast instead of queuing<br>
+2. Retry during low-traffic windows<br>
+3. Use techniques like adding columns with NULL (cheaper lock) then updating`,
+        sql: `-- Check active locks RIGHT NOW
+SELECT pid, mode, granted,
+  relation::regclass AS table_name,
+  LEFT(query, 80) AS query
+FROM pg_locks l
+JOIN pg_stat_activity a USING (pid)
+WHERE relation IS NOT NULL
+ORDER BY granted DESC, mode;
+
+-- Find blocking query (THE most useful query in production)
+SELECT
+  blocked.pid AS blocked_pid,
+  LEFT(blocked.query, 60) AS blocked_query,
+  blocker.pid AS blocker_pid,
+  LEFT(blocker.query, 60) AS blocker_query,
+  now() - blocked.query_start AS wait_duration
+FROM pg_stat_activity blocked
+JOIN pg_stat_activity blocker
+  ON blocker.pid = ANY(pg_blocking_pids(blocked.pid))
+WHERE cardinality(pg_blocking_pids(blocked.pid)) > 0;
+
+-- Kill a specific backend (gentle)
+SELECT pg_cancel_backend(pid);    -- cancels current query
+SELECT pg_terminate_backend(pid); -- terminates connection
+
+-- Advisory locks for app-level coordination
+SELECT pg_try_advisory_lock(42);   -- returns true/false
+SELECT pg_advisory_lock(42);       -- waits
+SELECT pg_advisory_unlock(42);
+
+-- Timeout settings
+SET lock_timeout = '3s';          -- fail if lock not acquired in 3s
+SET statement_timeout = '30s';    -- kill long queries
+SET idle_in_transaction_session_timeout = '10min';`,
+        note: "🔥 Set idle_in_transaction_session_timeout = '10min' in postgresql.conf. Connections sitting idle in a transaction hold locks indefinitely and block autovacuum — this is a very common production issue.",
+      },
+    ],
+  },
+  {
+    id: "backup",
+    icon: "💾",
+    title: "Backup & Replication",
+    desc: "pg_dump, pg_basebackup, PITR, streaming replication",
+    color: "#84CC16",
+    lessons: [
+      {
+        id: "bk1",
+        title: "Logical Backup: pg_dump",
+        tags: ["backup"],
+        summary: "pg_dump creates logical backups (SQL or custom format). Online, non-blocking, portable across PostgreSQL major versions.",
+        keyPoints: [
+          "pg_dump: single database backup",
+          "pg_dumpall: all databases + globals (roles, tablespaces)",
+          "-Fc: custom format — compressed, supports parallel restore",
+          "-Fd: directory format — parallel dump (-j N workers)",
+          "pg_restore: restore custom or directory format",
+          "-j N: parallel workers for restore",
+          "--schema-only / --data-only: partial backup",
+          "--exclude-table: skip specific tables",
+          "Uses REPEATABLE READ snapshot — consistent backup",
+          "Does NOT backup WAL — point-in-time recovery requires pg_basebackup",
+        ],
+        notes: `<strong>Backup format comparison:</strong><br>
+• <strong>Plain SQL (-Fp)</strong>: human-readable, not restartable on failure, no parallel<br>
+• <strong>Custom (-Fc)</strong>: compressed, supports pg_restore with -j parallel workers, can restore specific tables<br>
+• <strong>Directory (-Fd)</strong>: one file per table, best for parallel dump with -j, can be inspected
+
+<strong>Always use custom format (-Fc) for production backups.</strong>
+
+<strong>Restore trick — specific table only:</strong><br>
+pg_restore -d mydb -t employees backup.dump
+
+<strong>Script it with retention:</strong><br>
+Keep daily for 7 days, weekly for 4 weeks. Use find -mtime to delete old backups.`,
+        sql: `-- Full database backup (custom format, gzip-compressed)
+pg_dump -h localhost -U postgres -d mydb \\
+  -Fc -f /backup/mydb_$(date +%Y%m%d_%H%M).dump
+
+-- Parallel dump (4 workers, directory format)
+pg_dump -h localhost -U postgres -d mydb \\
+  -Fd -j 4 -f /backup/mydb_dir/
+
+-- Restore (parallel, to new database)
+createdb mydb_restore
+pg_restore -h localhost -U postgres \\
+  -d mydb_restore -Fc -j 4 /backup/mydb.dump
+
+-- Restore specific table only
+pg_restore -d mydb -t employees /backup/mydb.dump
+
+-- Schema only
+pg_dump -U postgres -d mydb --schema-only -f schema.sql
+
+-- Dump all (includes roles, tablespaces)
+pg_dumpall -U postgres -f /backup/cluster_full.sql
+
+-- Check dump contents without restoring
+pg_restore --list /backup/mydb.dump | head -30`,
+        note: "🔥 Test your restore process monthly! An untested backup is not a backup. Restore to a test instance and run SELECT COUNT(*) on key tables to verify data integrity.",
+      },
+      {
+        id: "bk2",
+        title: "Streaming Replication",
+        tags: ["replication","HA"],
+        summary: "Streaming replication sends WAL bytes from primary to standby in near real-time. Foundation for High Availability and read scaling.",
+        keyPoints: [
+          "Physical replication: byte-for-byte copy of primary data",
+          "WAL sender: process on primary that sends WAL to standby",
+          "WAL receiver: process on standby that receives and applies WAL",
+          "Async (default): primary doesn't wait for standby ACK",
+          "Sync: primary waits for standby to write/flush before committing",
+          "Hot Standby: standby serves read-only queries while in recovery",
+          "Replication lag: pg_stat_replication.write_lag / replay_lag",
+          "Replication slots: prevent WAL deletion until standby consumes",
+          "Failover: pg_promote() or pg_ctl promote",
+          "Patroni / repmgr: tools for automated failover",
+        ],
+        notes: `<strong>Setup overview (PostgreSQL 12+):</strong><br>
+1. Primary: wal_level = replica, max_wal_senders ≥ 3<br>
+2. Primary: create replication user with REPLICATION privilege<br>
+3. Primary: allow replication in pg_hba.conf<br>
+4. Standby: pg_basebackup to copy initial data dir<br>
+5. Standby: create standby.signal file<br>
+6. Standby: set primary_conninfo in postgresql.conf<br>
+7. Start standby — it connects and begins streaming WAL
+
+<strong>⚠️ Replication slot danger:</strong><br>
+If a standby with a replication slot disconnects, the primary keeps all WAL files to protect the slot. pg_wal grows unboundedly. Monitor pg_replication_slots!`,
+        sql: `-- On PRIMARY: create replication user
+CREATE USER replicator REPLICATION LOGIN
+  PASSWORD 'StrongPass123';
+
+-- pg_hba.conf on PRIMARY (add this line):
+-- host replication replicator standby_ip/32 scram-sha-256
+
+-- postgresql.conf on PRIMARY:
+-- wal_level = replica
+-- max_wal_senders = 5
+-- max_replication_slots = 5
+
+-- On STANDBY: take base backup (run in shell)
+-- pg_basebackup -h primary_ip -U replicator \\
+--   -D /var/lib/postgresql/14/standby \\
+--   -P -Xs -R
+-- -R creates standby.signal and primary_conninfo automatically!
+
+-- Monitor replication on PRIMARY
+SELECT pid, application_name, state,
+  write_lag, flush_lag, replay_lag,
+  sync_state
+FROM pg_stat_replication;
+
+-- On STANDBY: check lag
+SELECT now() - pg_last_xact_replay_timestamp() AS replication_lag;
+
+-- Check replication slots (watch for inactive!)
+SELECT slot_name, active, pg_size_pretty(
+  pg_wal_lsn_diff(pg_current_wal_lsn(), confirmed_flush_lsn)
+) AS wal_retained
+FROM pg_replication_slots;`,
+        note: "🔥 An inactive replication slot with no consumer will cause pg_wal to grow until disk is full → database crash. Drop unused slots immediately: SELECT pg_drop_replication_slot('slot_name');",
+      },
+    ],
+  },
+];
+
+// ═══════════════ QUIZ DATA ═══════════════
+const QUIZZES = {
+  basics: {
+    title: "Basics & Architecture",
+    questions: [
+      {
+        q: "What is the default port for PostgreSQL?",
+        opts: ["3306", "1521", "5432", "5433"],
+        ans: 2,
+        explain: "PostgreSQL listens on port 5432 by default. MySQL uses 3306, Oracle uses 1521.",
+      },
+      {
+        q: "In PostgreSQL, what does MVCC stand for?",
+        opts: ["Multi-Version Concurrency Control", "Main View Cache Control", "Multi-Value Column Configuration", "Managed Version Content Control"],
+        ans: 0,
+        explain: "MVCC = Multi-Version Concurrency Control. It allows readers and writers to work concurrently without blocking each other by maintaining multiple versions of rows.",
+      },
+      {
+        q: "Oracle NVL() is equivalent to which PostgreSQL function?",
+        opts: ["ISNULL()", "NVL()", "COALESCE()", "DECODE()"],
+        ans: 2,
+        explain: "COALESCE() returns the first non-NULL argument, equivalent to Oracle's NVL(). COALESCE is also SQL standard.",
+      },
+      {
+        q: "In PostgreSQL, DDL operations (CREATE TABLE, ALTER TABLE) are:",
+        opts: ["Auto-committed like Oracle", "Transactional — can be rolled back", "Require special ROLLBACK permission", "Only transactional in PG14+"],
+        ans: 1,
+        explain: "PostgreSQL has transactional DDL. You can BEGIN; CREATE TABLE; ROLLBACK; and the table disappears. Oracle always auto-commits DDL.",
+      },
+    ],
+  },
+  storage: {
+    title: "Storage & MVCC",
+    questions: [
+      {
+        q: "What is the default page size in PostgreSQL?",
+        opts: ["4KB", "8KB", "16KB", "32KB"],
+        ans: 1,
+        explain: "PostgreSQL uses 8KB (8192 bytes) pages by default. This is set at compile time (initdb). Some distributions support other sizes.",
+      },
+      {
+        q: "When you DELETE a row in PostgreSQL, what immediately happens?",
+        opts: ["The row is immediately removed from disk", "The row is moved to an UNDO tablespace", "The row's t_xmax is set to the current XID", "The row is moved to a DELETE queue"],
+        ans: 2,
+        explain: "DELETE only sets t_xmax on the tuple. The row stays in the heap file. VACUUM later marks the space as reusable. This is core to MVCC.",
+        code: "-- After DELETE, run this to see dead tuples accumulating:\nSELECT n_dead_tup FROM pg_stat_user_tables\nWHERE relname = 'employees';",
+      },
+      {
+        q: "TOAST in PostgreSQL handles:",
+        opts: ["Slow query caching", "Large column values that exceed ~2KB", "Transaction logging", "Type casting for strings"],
+        ans: 1,
+        explain: "TOAST (The Oversized-Attribute Storage Technique) automatically compresses and/or stores large column values (>~2KB) in a separate TOAST table.",
+      },
+    ],
+  },
+  perf: {
+    title: "Performance & Indexing",
+    questions: [
+      {
+        q: "Which index type should you use for JSONB column queries using @> operator?",
+        opts: ["B-Tree", "Hash", "GIN", "BRIN"],
+        ans: 2,
+        explain: "GIN (Generalized Inverted Index) is the correct choice for JSONB @> (contains), ? (key exists), and @? operators. GIN indexes store multiple key values per row entry.",
+      },
+      {
+        q: "CREATE INDEX CONCURRENTLY vs CREATE INDEX — what is the key difference?",
+        opts: [
+          "CONCURRENTLY is faster",
+          "CONCURRENTLY doesn't lock the table for writes",
+          "CONCURRENTLY builds a smaller index",
+          "No difference — they produce the same result",
+        ],
+        ans: 1,
+        explain: "CREATE INDEX CONCURRENTLY allows reads and writes during index building. Regular CREATE INDEX takes a ShareLock blocking all writes. Always use CONCURRENTLY in production.",
+      },
+      {
+        q: "In EXPLAIN output, when actual rows >> estimated rows, the right fix is:",
+        opts: ["Add SET enable_seqscan=OFF", "Run ANALYZE to update statistics", "Rebuild the entire database", "Increase work_mem"],
+        ans: 1,
+        explain: "A large difference between actual and estimated rows indicates stale planner statistics. ANALYZE updates them. Never use enable_seqscan=OFF as a permanent fix — it's masking the real problem.",
+      },
+      {
+        q: "VACUUM FULL vs VACUUM — key difference:",
+        opts: [
+          "VACUUM FULL is faster",
+          "VACUUM FULL returns disk space to OS but takes ACCESS EXCLUSIVE lock",
+          "VACUUM only works on tables, VACUUM FULL also works on indexes",
+          "There is no difference",
+        ],
+        ans: 1,
+        explain: "VACUUM FULL rewrites the entire table and returns space to the OS, but requires an exclusive lock (blocking all access). Regular VACUUM marks space reusable without locking.",
+      },
+    ],
+  },
+  locks: {
+    title: "Locks & Concurrency",
+    questions: [
+      {
+        q: "ALTER TABLE takes which PostgreSQL lock mode?",
+        opts: ["ROW EXCLUSIVE", "SHARE UPDATE EXCLUSIVE", "SHARE", "ACCESS EXCLUSIVE"],
+        ans: 3,
+        explain: "ALTER TABLE requires ACCESS EXCLUSIVE lock — the most restrictive mode, blocking ALL access (reads AND writes) for the duration.",
+      },
+      {
+        q: "Which SQL command detects queries that are currently blocking other queries?",
+        code: "SELECT blocked.pid, blocker.pid\nFROM pg_stat_activity blocked\nJOIN pg_stat_activity blocker\n  ON blocker.pid = ???(blocked.pid)\nWHERE cardinality(???(blocked.pid)) > 0;",
+        opts: ["pg_cancel_backend", "pg_blocking_pids", "pg_stat_replication", "pg_locks"],
+        ans: 1,
+        explain: "pg_blocking_pids(pid) returns an array of PIDs that are blocking the given PID. It's the standard way to find blocking queries in PostgreSQL 9.6+.",
+      },
+    ],
+  },
+};
+
+// ═══════════════ SCENARIOS DATA ═══════════════
+const SCENARIOS = [
+  {
+    title: "Database Suddenly Slow — What Do You Check?",
+    severity: "high",
+    category: "Performance",
+    steps: [
+      "Check active queries: SELECT pid, now()-query_start AS dur, state, LEFT(query,80) FROM pg_stat_activity ORDER BY dur DESC NULLS LAST;",
+      "Look for long-running or idle-in-transaction sessions that may be holding locks",
+      "Check for blocking chains: use pg_blocking_pids() query",
+      "Check cache hit ratio: should be > 99% for an OLTP workload",
+      "Run EXPLAIN ANALYZE on the slowest queries (use pg_stat_statements to find them)",
+      "Check for table bloat from missing autovacuum: n_dead_tup in pg_stat_user_tables",
+      "Check disk I/O, CPU, and memory using pg_stat_bgwriter and OS-level tools",
+    ],
+  },
+  {
+    title: "Disk Full — pg_wal Growing Unboundedly",
+    severity: "high",
+    category: "Storage",
+    steps: [
+      "Immediately check replication slots: SELECT slot_name, active, pg_size_pretty(pg_wal_lsn_diff(pg_current_wal_lsn(), confirmed_flush_lsn)) FROM pg_replication_slots;",
+      "If an inactive slot is retaining WAL: SELECT pg_drop_replication_slot('slot_name'); — ONLY if you don't need that standby",
+      "Check archive_command: if archiving is failing, WAL piles up. Look at postgresql logs for archive failures",
+      "Check if a standby is very far behind — it won't release WAL until it catches up",
+      "Temporary relief: add disk space or move pg_wal to a larger mount",
+      "Long term: monitor pg_replication_slots and set max_slot_wal_keep_size (PG13+) to limit WAL retained per slot",
+    ],
+  },
+  {
+    title: "Deadlock Detected — Application Errors",
+    severity: "medium",
+    category: "Locks",
+    steps: [
+      "Find deadlock details in PostgreSQL logs (look for ERROR: deadlock detected)",
+      "Identify the transactions involved and the tables/rows they were locking",
+      "Root cause: usually two transactions acquiring the same locks in different order",
+      "Fix: ensure all code acquires locks in the same order (e.g., always lock table A before table B)",
+      "Short-term mitigation: set lock_timeout = '5s' so deadlocked transactions fail fast",
+      "Use SELECT ... FOR UPDATE OF specific_columns to minimize lock scope",
+      "Consider using advisory locks for application-level coordination",
+    ],
+  },
+  {
+    title: "XID Wraparound Warning",
+    severity: "high",
+    category: "MVCC",
+    steps: [
+      "Check immediately: SELECT datname, age(datfrozenxid), 2147483647-age(datfrozenxid) AS remaining FROM pg_database ORDER BY age(datfrozenxid) DESC;",
+      "If remaining < 10,000,000: THIS IS AN EMERGENCY. Run VACUUM FREEZE on the oldest tables immediately",
+      "Check which tables have oldest unfrozen XIDs: SELECT relname, age(relfrozenxid) FROM pg_class WHERE relkind='r' ORDER BY age(relfrozenxid) DESC LIMIT 10;",
+      "Run: VACUUM FREEZE tablename; on top offenders",
+      "If autovacuum is disabled: RE-ENABLE IT NOW. Never disable autovacuum.",
+      "Check if autovacuum is being blocked by long-running transactions",
+      "After fixing: increase autovacuum_freeze_max_age in postgresql.conf to trigger freeze earlier next time",
+    ],
+  },
+  {
+    title: "Replication Lag Increasing",
+    severity: "medium",
+    category: "Replication",
+    steps: [
+      "Check current lag on primary: SELECT pid, application_name, write_lag, flush_lag, replay_lag FROM pg_stat_replication;",
+      "Check on standby: SELECT now() - pg_last_xact_replay_timestamp() AS lag;",
+      "High lag causes: (1) primary generating WAL faster than network can transfer, (2) standby I/O bottleneck replaying WAL, (3) long-running queries on HOT STANDBY holding recovery back",
+      "Check standby for long-running queries that conflict with recovery",
+      "Increase max_standby_streaming_delay and max_standby_archive_delay on standby if queries are conflicting",
+      "For network bottleneck: enable wal_compression=on on primary",
+      "Consider synchronous_commit=off if write latency is acceptable to reduce primary load",
+    ],
+  },
+  {
+    title: "High Connection Count — Too Many Connections",
+    severity: "medium",
+    category: "Performance",
+    steps: [
+      "Check current connections: SELECT count(*) FROM pg_stat_activity; and SHOW max_connections;",
+      "Identify idle connections: SELECT count(*) FROM pg_stat_activity WHERE state='idle';",
+      "Short term: terminate idle connections (after confirming safe) — SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE state='idle' AND query_start < now() - interval '10 min';",
+      "Real fix: deploy PgBouncer in front of PostgreSQL with transaction pooling",
+      "Set pool_size to ~2× CPU cores in PgBouncer",
+      "For Lambda/serverless: use RDS Proxy (managed PgBouncer on AWS)",
+      "Long term: set max_connections to a reasonable value (100-300) and ensure app uses pooling",
+    ],
+  },
+];
+
+// ═══════════════ DAILY CHALLENGES ═══════════════
+const DAILY_CHALLENGES = [
+  {
+    q: "A table has 10 million rows and autovacuum hasn't run for 6 hours. The table has 2 million dead tuples. What is the likely cause and how do you fix it?",
+    hint: "Think about what blocks autovacuum from running...",
+    answer: `<strong>Likely causes:</strong><br>
+1. <strong>Long-running transaction</strong>: autovacuum won't remove dead tuples that are still visible to any active snapshot. Find it with: <code>SELECT pid, now()-xact_start, query FROM pg_stat_activity WHERE xact_start IS NOT NULL ORDER BY xact_start;</code><br>
+2. <strong>autovacuum throttled</strong>: autovacuum_vacuum_cost_delay is too high, slowing it down<br>
+3. <strong>Table-level autovacuum disabled</strong>: check pg_class.reloptions<br><br>
+<strong>Fix:</strong><br>
+• Terminate the long transaction (after confirming safe)<br>
+• Run VACUUM ANALYZE manually<br>
+• Per-table: ALTER TABLE t SET (autovacuum_vacuum_scale_factor=0.01);`,
+  },
+  {
+    q: "What is the difference between pg_cancel_backend(pid) and pg_terminate_backend(pid)?",
+    hint: "One is gentler than the other...",
+    answer: `<strong>pg_cancel_backend(pid)</strong>: Sends SIGINT to the backend process — cancels the <em>current query</em> but keeps the connection alive. The session can continue running new queries.<br><br>
+<strong>pg_terminate_backend(pid)</strong>: Sends SIGTERM — terminates the entire connection. The client will get a "connection lost" error and must reconnect.<br><br>
+<strong>Best practice</strong>: Try cancel first. If that doesn't work (e.g., stuck in lock wait, not in a cancellable state), use terminate.`,
+  },
+  {
+    q: "Your EXPLAIN ANALYZE shows 'Sort Method: external merge Disk: 48MB'. What does this mean and how do you fix it?",
+    hint: "Think about memory allocation...",
+    answer: `<strong>Meaning</strong>: The sort operation couldn't fit in memory and spilled to disk (temp files). 'External merge' = disk-based merge sort, which is dramatically slower than in-memory sort.<br><br>
+<strong>Fix</strong>: Increase work_mem for the session or globally.<br>
+<code>SET work_mem = '256MB';</code> — then re-run the query<br><br>
+<strong>Important</strong>: work_mem is allocated PER OPERATION PER QUERY. A query with 5 sorts and 200 connections could use 5 × 256MB × 200 = 256GB! Set globally with caution. Better to set it per session for expensive queries.`,
+  },
+];
+
+// ═══════════════ INTERVIEW QUESTIONS ═══════════════
+const INTERVIEW_QS = [
+  { q: "Explain the difference between VACUUM and VACUUM FULL.", a: "VACUUM marks dead tuples as reusable space within the table file — fast, minimal locking (doesn't block reads or writes), but doesn't return space to the OS. VACUUM FULL rewrites the entire table to a new file, returns space to OS, and updates indexes — but requires ACCESS EXCLUSIVE lock blocking all access. Use VACUUM FULL only during maintenance windows. For production: regular VACUUM + autovacuum is the right approach." },
+  { q: "How does PostgreSQL handle concurrent reads and writes without locking?", a: "Through MVCC (Multi-Version Concurrency Control). Each row stores t_xmin (the XID of the transaction that created it) and t_xmax (the XID of the transaction that deleted/updated it). Each query works with a 'snapshot' — a consistent view of all committed transactions at query start. Readers see only rows where t_xmin committed before the snapshot and t_xmax is not yet committed. This means readers never block writers and writers never block readers." },
+  { q: "What is pg_stat_statements and why is it important?", a: "pg_stat_statements is an extension that tracks execution statistics of all SQL statements — total calls, total/mean execution time, rows returned, cache hits, etc. It's the primary tool for identifying slow queries in production. Enable it in shared_preload_libraries, then query pg_stat_statements to find queries with high total_exec_time or high mean_exec_time. Always enable this in production — the overhead is minimal (< 1%)." },
+  { q: "Explain Write-Ahead Logging (WAL) and why it matters.", a: "WAL ensures durability and crash recovery. Every change to data pages is first written to the WAL (sequential write to pg_wal/) before the data page is modified in shared_buffers. On crash, PostgreSQL reads the last checkpoint position from pg_control and replays all WAL records after it, bringing data to a consistent state. WAL also enables replication (standby replays WAL) and PITR (point-in-time recovery with archived WAL + base backup)." },
+  { q: "What is a bloated table and how do you detect and fix it?", a: "Table bloat occurs when dead tuples accumulate faster than autovacuum can remove them, and when frequent MVCC updates leave pages with lots of dead space. Detect with: SELECT n_dead_tup, n_live_tup FROM pg_stat_user_tables. Also use pgstattuple extension for detailed bloat analysis. Fix: ANALYZE + VACUUM for minor bloat. For severe bloat with autovacuum keeping up: tune autovacuum per table (lower scale_factor). For extreme bloat needing space reclaim: VACUUM FULL or pg_repack (online, no table lock)." },
+  { q: "How would you tune PostgreSQL for a write-heavy workload?", a: "Key parameters: (1) shared_buffers: 25% of RAM. (2) wal_buffers: 64MB. (3) checkpoint_completion_target: 0.9 (spread checkpoint I/O). (4) max_wal_size: 2-4GB (fewer checkpoints). (5) synchronous_commit: off (risky but big write gain). (6) autovacuum_vacuum_cost_delay: lower value for faster cleanup. (7) Use UNLOGGED tables for temp data. (8) Use COPY instead of INSERT for bulk loads. (9) Batch INSERTs in single transactions (not one transaction per row)." },
+];
+
+// ═══════════════ SQL SIMULATOR DATASETS ═══════════════
+const DATASETS = {
+  hr: {
+    name: "HR / Employees",
+    tables: {
+      employees: [
+        { id: 1, name: "Elisha Kumar", dept_id: 1, salary: 95000, is_active: true, hire_date: "2022-03-15" },
+        { id: 2, name: "Priya Sharma", dept_id: 2, salary: 82000, is_active: true, hire_date: "2021-07-01" },
+        { id: 3, name: "Arun Patel", dept_id: 1, salary: 75000, is_active: true, hire_date: "2023-01-10" },
+        { id: 4, name: "Meera Nair", dept_id: 3, salary: 110000, is_active: true, hire_date: "2020-05-20" },
+        { id: 5, name: "Raj Gupta", dept_id: 2, salary: 68000, is_active: false, hire_date: "2019-11-15" },
+        { id: 6, name: "Sunita Reddy", dept_id: 1, salary: 92000, is_active: true, hire_date: "2022-08-01" },
+        { id: 7, name: "Vikram Singh", dept_id: 3, salary: 145000, is_active: true, hire_date: "2018-03-22" },
+        { id: 8, name: "Deepa Krishnan", dept_id: 2, salary: 79000, is_active: true, hire_date: "2023-06-05" },
+      ],
+      departments: [
+        { id: 1, dept_name: "Engineering", location: "Hyderabad", budget: 5000000 },
+        { id: 2, dept_name: "Product", location: "Bangalore", budget: 3000000 },
+        { id: 3, dept_name: "Engineering Lead", location: "Hyderabad", budget: 8000000 },
+      ],
+    },
+    sampleQueries: [
+      "SELECT * FROM employees",
+      "SELECT * FROM employees WHERE is_active = true",
+      "SELECT * FROM employees WHERE salary > 80000",
+      "SELECT dept_id, COUNT(*) AS count, AVG(salary) AS avg_salary FROM employees GROUP BY dept_id",
+      "SELECT e.name, d.dept_name FROM employees e JOIN departments d ON e.dept_id = d.id",
+      "SELECT * FROM employees ORDER BY salary DESC LIMIT 3",
+      "SELECT name, salary FROM employees WHERE dept_id = 1 AND is_active = true",
+    ],
+    schema: {
+      employees: ["id BIGINT PK", "name TEXT", "dept_id INT FK", "salary NUMERIC", "is_active BOOLEAN", "hire_date DATE"],
+      departments: ["id INT PK", "dept_name TEXT", "location TEXT", "budget NUMERIC"],
+    },
+  },
+  ecommerce: {
+    name: "E-Commerce",
+    tables: {
+      orders: [
+        { id: 1, customer_id: 101, product: "PostgreSQL Book", amount: 599, status: "delivered", order_date: "2024-01-15" },
+        { id: 2, customer_id: 102, product: "SSD Drive", amount: 4500, status: "delivered", order_date: "2024-01-20" },
+        { id: 3, customer_id: 101, product: "USB Hub", amount: 1200, status: "shipped", order_date: "2024-02-01" },
+        { id: 4, customer_id: 103, product: "Laptop Stand", amount: 2800, status: "pending", order_date: "2024-02-10" },
+        { id: 5, customer_id: 102, product: "Mechanical Keyboard", amount: 6800, status: "delivered", order_date: "2024-02-15" },
+        { id: 6, customer_id: 104, product: "Monitor", amount: 18000, status: "shipped", order_date: "2024-03-01" },
+        { id: 7, customer_id: 101, product: "Mouse Pad", amount: 350, status: "delivered", order_date: "2024-03-05" },
+      ],
+      customers: [
+        { id: 101, name: "Elisha Kumar", city: "Hyderabad", tier: "premium" },
+        { id: 102, name: "Priya Sharma", city: "Bangalore", tier: "standard" },
+        { id: 103, name: "Arun Patel", city: "Mumbai", tier: "standard" },
+        { id: 104, name: "Meera Nair", city: "Hyderabad", tier: "premium" },
+      ],
+    },
+    sampleQueries: [
+      "SELECT * FROM orders",
+      "SELECT * FROM orders WHERE status = 'delivered'",
+      "SELECT customer_id, SUM(amount) AS total FROM orders GROUP BY customer_id",
+      "SELECT c.name, o.product, o.amount FROM orders o JOIN customers c ON o.customer_id = c.id",
+      "SELECT status, COUNT(*) AS count, SUM(amount) AS revenue FROM orders GROUP BY status",
+      "SELECT * FROM orders WHERE amount > 3000 ORDER BY amount DESC",
+    ],
+    schema: {
+      orders: ["id INT PK", "customer_id INT FK", "product TEXT", "amount NUMERIC", "status TEXT", "order_date DATE"],
+      customers: ["id INT PK", "name TEXT", "city TEXT", "tier TEXT"],
+    },
+  },
+  logs: {
+    name: "System Logs",
+    tables: {
+      system_logs: [
+        { id: 1, level: "ERROR", service: "auth", message: "Connection timeout", duration_ms: 5000, ts: "2024-03-01 09:00:01" },
+        { id: 2, level: "INFO", service: "api", message: "Request processed", duration_ms: 45, ts: "2024-03-01 09:00:05" },
+        { id: 3, level: "WARN", service: "db", message: "Slow query detected", duration_ms: 3200, ts: "2024-03-01 09:01:00" },
+        { id: 4, level: "ERROR", service: "auth", message: "Invalid token", duration_ms: 12, ts: "2024-03-01 09:05:00" },
+        { id: 5, level: "INFO", service: "api", message: "Cache hit", duration_ms: 2, ts: "2024-03-01 09:05:01" },
+        { id: 6, level: "ERROR", service: "db", message: "Deadlock detected", duration_ms: 150, ts: "2024-03-01 09:10:00" },
+        { id: 7, level: "WARN", service: "api", message: "Rate limit near", duration_ms: 5, ts: "2024-03-01 09:15:00" },
+        { id: 8, level: "INFO", service: "db", message: "Autovacuum complete", duration_ms: 8000, ts: "2024-03-01 09:20:00" },
+      ],
+    },
+    sampleQueries: [
+      "SELECT * FROM system_logs",
+      "SELECT * FROM system_logs WHERE level = 'ERROR'",
+      "SELECT level, COUNT(*) AS count FROM system_logs GROUP BY level",
+      "SELECT service, AVG(duration_ms) AS avg_ms FROM system_logs GROUP BY service",
+      "SELECT * FROM system_logs WHERE duration_ms > 1000 ORDER BY duration_ms DESC",
+      "SELECT level, service, COUNT(*) FROM system_logs GROUP BY level, service ORDER BY count DESC",
+    ],
+    schema: {
+      system_logs: ["id INT PK", "level TEXT", "service TEXT", "message TEXT", "duration_ms INT", "ts TIMESTAMP"],
+    },
+  },
+};
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let state = {
+  currentModule: null,
+  currentLesson: null,
+  currentFlatIdx: 0,
+  flatLessons: [],
+  bookmarks: JSON.parse(localStorage.getItem('pglearn_bm') || '[]'),
+  done: JSON.parse(localStorage.getItem('pglearn_done') || '[]'),
+  currentDataset: 'hr',
+  quizModule: null,
+  quizIdx: 0,
+  quizAnswers: [],
+  quizDone: false,
+};
+
+// Build flat lesson list
+MODULES.forEach(m => m.lessons.forEach(l => {
+  state.flatLessons.push({ module: m, lesson: l });
+}));
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  renderModulesGrid();
+  updateStats();
+  renderPlayground();
+  renderQuizSelect();
+  renderScenarios();
+  renderDailyChallenge();
+  renderInterviewQs();
+  setDataset('hr', document.querySelector('.ds-btn.active'));
+});
+
+// ═══════════════════════════════════════════════════════
+// VIEW MANAGEMENT
+// ═══════════════════════════════════════════════════════
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const el = document.getElementById('view-' + id);
+  if (el) el.classList.add('active');
+  if (id === 'bookmarks') renderBookmarks();
+  window.scrollTo(0, 0);
+}
+
+function setActiveTab(el) {
+  document.querySelectorAll('.ntab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════
+// HOME — MODULES GRID
+// ═══════════════════════════════════════════════════════
+function renderModulesGrid() {
+  const grid = document.getElementById('modulesGrid');
+  const total = MODULES.reduce((a, m) => a + m.lessons.length, 0);
+  document.getElementById('totalLessons').textContent = total;
+  grid.innerHTML = MODULES.map((m, i) => {
+    const doneCnt = m.lessons.filter(l => state.done.includes(l.id)).length;
+    const pct = m.lessons.length ? Math.round(doneCnt / m.lessons.length * 100) : 0;
+    return `<div class="module-card" style="--card-color:${m.color}" onclick="openModule('${m.id}')">
+      ${doneCnt === m.lessons.length && doneCnt > 0 ? `<div class="mc-badge">✓ Done</div>` : ''}
+      <div class="mc-icon">${m.icon}</div>
+      <div class="mc-title">${m.title}</div>
+      <div class="mc-meta">${m.lessons.length} lesson${m.lessons.length !== 1 ? 's' : ''} · ${pct}% done</div>
+      <div class="mc-bar"><div class="mc-bar-fill" style="width:${pct}%;background:${m.color}"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function updateStats() {
+  const done = state.done.length;
+  const total = state.flatLessons.length;
+  const pct = total ? Math.round(done / total * 100) : 0;
+  document.getElementById('doneLessons').textContent = done;
+  document.getElementById('totalBookmarks').textContent = state.bookmarks.length;
+  document.getElementById('progressPct').textContent = pct + '%';
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+// ═══════════════════════════════════════════════════════
+// MODULE → LESSON LIST
+// ═══════════════════════════════════════════════════════
+function openModule(moduleId) {
+  const m = MODULES.find(x => x.id === moduleId);
+  if (!m) return;
+  state.currentModule = m;
+  document.getElementById('llTitle').textContent = m.icon + ' ' + m.title;
+  document.getElementById('llDesc').textContent = m.desc;
+  const body = document.getElementById('lessonListBody');
+  body.innerHTML = m.lessons.map((l, i) => {
+    const isDone = state.done.includes(l.id);
+    const isBm = state.bookmarks.includes(l.id);
+    return `<div class="lesson-item" onclick="openLesson('${m.id}','${l.id}')">
+      <div class="li-num ${isDone ? 'done' : i === 0 ? 'current' : 'locked'}">${isDone ? '✓' : i + 1}</div>
+      <div class="li-info">
+        <div class="li-title">${l.title}</div>
+        <div class="li-sub">${(l.tags || []).join(' · ')}</div>
+      </div>
+      <span class="li-bm" onclick="event.stopPropagation();toggleBookmark('${l.id}',event)">${isBm ? '🔖' : '🏷️'}</span>
+    </div>`;
+  }).join('');
+  showView('lessonlist');
+}
+
+// ═══════════════════════════════════════════════════════
+// LESSON CONTENT
+// ═══════════════════════════════════════════════════════
+function openLesson(moduleId, lessonId) {
+  const m = MODULES.find(x => x.id === moduleId);
+  const l = m?.lessons.find(x => x.id === lessonId);
+  if (!m || !l) return;
+  state.currentModule = m;
+  state.currentLesson = l;
+  state.currentFlatIdx = state.flatLessons.findIndex(x => x.lesson.id === lessonId);
+  renderLessonContent(m, l);
+  showView('lesson');
+}
+
+function renderLessonContent(m, l) {
+  document.getElementById('lcBreadcrumb').textContent = m.icon + ' ' + m.title + ' → ' + l.title;
+  document.getElementById('lcTitle').textContent = l.title;
+  document.getElementById('lcSummary').textContent = l.summary;
+  document.getElementById('lcBmBtn').textContent = state.bookmarks.includes(l.id) ? '🔖' : '🏷️';
+  const isDone = state.done.includes(l.id);
+  document.getElementById('markDoneBtn').textContent = isDone ? '✓ Done!' : '✓ Mark Done';
+  document.getElementById('markDoneBtn').style.background = isDone ? 'rgba(16,185,129,0.2)' : '';
+  document.getElementById('markDoneBtn').style.color = isDone ? 'var(--green)' : '';
+  const prevBtn = document.getElementById('prevLessonBtn');
+  const nextBtn = document.getElementById('nextLessonBtn');
+  prevBtn.disabled = state.currentFlatIdx <= 0;
+  nextBtn.disabled = state.currentFlatIdx >= state.flatLessons.length - 1;
+
+  // Notes tab
+  let notesHtml = '';
+  if (l.diagram) {
+    notesHtml += `<div class="diagram-box"><strong style="color:var(--accent);font-size:11px;letter-spacing:1px;">STRUCTURE</strong><br><br>${l.diagram}</div>`;
+  }
+  if (l.notes) {
+    notesHtml += `<div style="font-size:13px;line-height:1.8;color:var(--muted);margin-bottom:12px;">${l.notes}</div>`;
+  }
+  if (l.note) {
+    notesHtml += `<div class="note-box">${l.note}</div>`;
+  }
+  document.getElementById('ctab-notes').innerHTML = notesHtml || '<div class="output-msg ok">-- See Key Points and SQL tabs</div>';
+
+  // Key points tab
+  document.getElementById('ctab-keypoints').innerHTML = (l.keyPoints || []).map((kp, i) =>
+    `<div class="kp-item"><span class="kp-num">${String(i+1).padStart(2,'0')}</span><span class="kp-text">${kp}</span></div>`
+  ).join('') + (l.note ? `<div class="note-box" style="margin-top:16px;">${l.note}</div>` : '');
+
+  // SQL tab
+  document.getElementById('ctab-sql').innerHTML = l.sql
+    ? `<div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">SQL — PostgreSQL</span>
+          <button class="copy-btn" onclick="copyCode(this, \`${escAttr(l.sql)}\`)">Copy</button>
+        </div>
+        <pre>${escHtml(l.sql)}</pre>
+      </div>`
+    : '<div class="output-msg">No SQL examples for this topic.</div>';
+
+  showCtab('notes', document.querySelector('.ctab.active'));
+  document.querySelectorAll('.ctab').forEach((t,i) => { t.classList.remove('active'); if(i===0) t.classList.add('active'); });
+}
+
+function showCtab(name, btn) {
+  ['notes','keypoints','sql'].forEach(n => {
+    document.getElementById('ctab-'+n).style.display = n === name ? 'block' : 'none';
+  });
+  document.querySelectorAll('.ctab').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+function navigateLesson(dir) {
+  const next = state.currentFlatIdx + dir;
+  if (next < 0 || next >= state.flatLessons.length) return;
+  state.currentFlatIdx = next;
+  const { module: m, lesson: l } = state.flatLessons[next];
+  state.currentModule = m;
+  state.currentLesson = l;
+  renderLessonContent(m, l);
+  window.scrollTo(0, 0);
+}
+
+function markDone() {
+  const id = state.currentLesson?.id;
+  if (!id) return;
+  if (!state.done.includes(id)) {
+    state.done.push(id);
+    localStorage.setItem('pglearn_done', JSON.stringify(state.done));
+    showToast('✓ Marked as done!');
+    updateStats();
+    renderModulesGrid();
+    const btn = document.getElementById('markDoneBtn');
+    btn.textContent = '✓ Done!';
+    btn.style.background = 'rgba(16,185,129,0.2)';
+    btn.style.color = 'var(--green)';
+  }
+}
+
+function toggleCurrentBookmark() {
+  const id = state.currentLesson?.id;
+  if (!id) return;
+  toggleBookmarkById(id);
+  document.getElementById('lcBmBtn').textContent = state.bookmarks.includes(id) ? '🔖' : '🏷️';
+}
+
+function toggleBookmark(id, e) {
+  toggleBookmarkById(id);
+  if (e && e.target) e.target.textContent = state.bookmarks.includes(id) ? '🔖' : '🏷️';
+}
+
+function toggleBookmarkById(id) {
+  if (state.bookmarks.includes(id)) {
+    state.bookmarks = state.bookmarks.filter(b => b !== id);
+    showToast('Bookmark removed');
+  } else {
+    state.bookmarks.push(id);
+    showToast('🔖 Bookmarked!');
+  }
+  localStorage.setItem('pglearn_bm', JSON.stringify(state.bookmarks));
+  updateStats();
+}
+
+// ═══════════════════════════════════════════════════════
+// SQL PLAYGROUND
+// ═══════════════════════════════════════════════════════
+function renderPlayground() {
+  renderSampleQueries();
+  renderSchemaInfo();
+}
+
+function setDataset(name, btn) {
+  state.currentDataset = name;
+  document.querySelectorAll('.ds-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.getElementById('sqlEditor').value = DATASETS[name].sampleQueries[0];
+  renderSampleQueries();
+  renderSchemaInfo();
+  document.getElementById('outputBody').innerHTML = '<div class="output-msg ok">-- Dataset changed. Run a query!</div>';
+  document.getElementById('outputStatus').textContent = '';
+}
+
+function renderSampleQueries() {
+  const ds = DATASETS[state.currentDataset];
+  document.getElementById('sampleQueriesWrap').innerHTML = ds.sampleQueries
+    .map(q => `<span class="sq-chip" onclick="loadQuery(this)">${q.length > 50 ? q.substring(0,50)+'…' : q}<span style="display:none">${q}</span></span>`)
+    .join('');
+}
+
+function renderSchemaInfo() {
+  const ds = DATASETS[state.currentDataset];
+  let html = '';
+  for (const [tname, cols] of Object.entries(ds.schema)) {
+    html += `<div class="schema-table">
+      <div class="schema-tname">📋 ${tname}</div>
+      ${cols.map(c => `<div class="schema-col">  <span>${c.split(' ')[0]}</span> ${c.split(' ').slice(1).join(' ')}</div>`).join('')}
+    </div>`;
+  }
+  document.getElementById('schemaInfoWrap').innerHTML = html;
+}
+
+function loadQuery(el) {
+  const q = el.querySelector('span').textContent;
+  document.getElementById('sqlEditor').value = q;
+}
+
+function runSQL() {
+  const sql = document.getElementById('sqlEditor').value.trim();
+  if (!sql) return;
+  const ds = DATASETS[state.currentDataset];
+  const result = executeSQL(sql, ds.tables);
+  renderOutput(result);
+}
+
+function executeSQL(sql, tables) {
+  try {
+    const normalized = sql.trim().replace(/\s+/g, ' ').replace(/;$/, '');
+    const upper = normalized.toUpperCase();
+
+    if (!upper.startsWith('SELECT')) {
+      return { error: "Only SELECT queries supported in the simulator. DML is read-only here." };
+    }
+
+    // Parse basic SELECT
+    const fromMatch = normalized.match(/FROM\s+(\w+)/i);
+    if (!fromMatch) return { error: "Could not parse FROM clause." };
+    const tableName = fromMatch[1].toLowerCase();
+
+    if (!tables[tableName]) {
+      return { error: `Table '${tableName}' not found. Available: ${Object.keys(tables).join(', ')}` };
+    }
+
+    let rows = [...tables[tableName]];
+
+    // JOIN
+    const joinMatch = normalized.match(/JOIN\s+(\w+)\s+ON\s+([\w.]+)\s*=\s*([\w.]+)/i);
+    if (joinMatch) {
+      const joinTable = joinMatch[1].toLowerCase();
+      const left = joinMatch[2].toLowerCase().split('.').pop();
+      const right = joinMatch[3].toLowerCase().split('.').pop();
+      if (tables[joinTable]) {
+        const joinRows = tables[joinTable];
+        rows = rows.map(r => {
+          const j = joinRows.find(jr => String(jr[right]) === String(r[left]) || String(jr[left]) === String(r[right]));
+          return j ? { ...r, ...j } : null;
+        }).filter(Boolean);
+      }
+    }
+
+    // WHERE
+    const whereMatch = normalized.match(/WHERE\s+(.*?)(?:\s+GROUP BY|\s+ORDER BY|\s+LIMIT|$)/i);
+    if (whereMatch) {
+      const cond = whereMatch[1].trim();
+      rows = rows.filter(row => evalWhere(row, cond));
+    }
+
+    // GROUP BY + aggregate
+    const groupMatch = normalized.match(/GROUP BY\s+(.+?)(?:\s+ORDER BY|\s+LIMIT|$)/i);
+    if (groupMatch) {
+      const groupCols = groupMatch[1].split(',').map(c => c.trim().toLowerCase());
+      const groups = {};
+      rows.forEach(r => {
+        const key = groupCols.map(c => r[c]).join('|');
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(r);
+      });
+
+      // Parse SELECT columns for aggregates
+      const selectStr = normalized.match(/SELECT\s+(.*?)\s+FROM/i)?.[1] || '*';
+      const cols = parseSelectCols(selectStr, rows[0] || {});
+
+      rows = Object.entries(groups).map(([key, grp]) => {
+        const base = {};
+        groupCols.forEach((c, i) => base[c] = key.split('|')[i]);
+        cols.filter(c => c.agg).forEach(c => {
+          if (c.agg === 'COUNT') base[c.alias] = grp.length;
+          else if (c.agg === 'SUM') base[c.alias] = grp.reduce((a, r) => a + (parseFloat(r[c.col]) || 0), 0).toFixed(2);
+          else if (c.agg === 'AVG') base[c.alias] = (grp.reduce((a, r) => a + (parseFloat(r[c.col]) || 0), 0) / grp.length).toFixed(2);
+          else if (c.agg === 'MAX') base[c.alias] = Math.max(...grp.map(r => parseFloat(r[c.col]) || 0));
+          else if (c.agg === 'MIN') base[c.alias] = Math.min(...grp.map(r => parseFloat(r[c.col]) || 0));
+        });
+        return base;
+      });
+    }
+
+    // ORDER BY
+    const orderMatch = normalized.match(/ORDER BY\s+(.+?)(?:\s+LIMIT|$)/i);
+    if (orderMatch) {
+      const parts = orderMatch[1].trim().split(/\s+/);
+      const col = parts[0].toLowerCase().replace(/\d+/, '');
+      const desc = parts[1]?.toUpperCase() === 'DESC';
+      rows.sort((a, b) => {
+        const av = a[col], bv = b[col];
+        if (!isNaN(parseFloat(av))) return desc ? parseFloat(bv) - parseFloat(av) : parseFloat(av) - parseFloat(bv);
+        return desc ? String(bv).localeCompare(String(av)) : String(av).localeCompare(String(bv));
+      });
+    }
+
+    // LIMIT
+    const limitMatch = normalized.match(/LIMIT\s+(\d+)/i);
+    if (limitMatch) rows = rows.slice(0, parseInt(limitMatch[1]));
+
+    // SELECT columns
+    const selectStr = normalized.match(/SELECT\s+(.*?)\s+FROM/i)?.[1] || '*';
+    if (selectStr.trim() !== '*' && !selectStr.toUpperCase().includes('COUNT') && !selectStr.toUpperCase().includes('AVG') && !selectStr.toUpperCase().includes('SUM') && !groupMatch) {
+      const wantedCols = selectStr.split(',').map(c => c.trim().toLowerCase().split(/\s+as\s+/i)[0].trim().split('.').pop());
+      rows = rows.map(r => {
+        const out = {};
+        wantedCols.forEach(c => { if (r[c] !== undefined) out[c] = r[c]; });
+        return out;
+      });
+    }
+
+    if (rows.length === 0) return { rows: [], message: '(0 rows)' };
+    return { rows, rowCount: rows.length };
+  } catch(e) {
+    return { error: 'Parse error: ' + e.message };
+  }
+}
+
+function evalWhere(row, cond) {
+  try {
+    // Handle simple conditions
+    let c = cond;
+    // Replace column references with row values
+    Object.entries(row).forEach(([k, v]) => {
+      const val = typeof v === 'string' ? `'${v}'` : v;
+      c = c.replace(new RegExp('\\b' + k + '\\b', 'gi'), val);
+    });
+    // Handle boolean literals
+    c = c.replace(/\btrue\b/gi, 'true').replace(/\bfalse\b/gi, 'false');
+    // Replace = with == (not ===)
+    c = c.replace(/([^!<>])=(?!=)/g, '$1==');
+    // Replace <> with !=
+    c = c.replace(/<>/g, '!=');
+    return !!Function(`"use strict"; return (${c})`)();
+  } catch {
+    return true;
+  }
+}
+
+function parseSelectCols(str, sample) {
+  return str.split(',').map(col => {
+    col = col.trim();
+    const aggMatch = col.match(/(COUNT|SUM|AVG|MAX|MIN)\s*\(\s*(\*|\w+)\s*\)(?:\s+AS\s+(\w+))?/i);
+    if (aggMatch) {
+      return {
+        agg: aggMatch[1].toUpperCase(),
+        col: aggMatch[2].toLowerCase(),
+        alias: aggMatch[3]?.toLowerCase() || aggMatch[1].toLowerCase() + '_' + aggMatch[2].toLowerCase(),
+      };
+    }
+    return { col: col.toLowerCase().split(/\s+as\s+/i)[0].trim() };
+  });
+}
+
+function renderOutput(result) {
+  const status = document.getElementById('outputStatus');
+  const body = document.getElementById('outputBody');
+  if (result.error) {
+    status.textContent = '✗ ERROR';
+    status.className = 'output-status err';
+    body.innerHTML = `<div class="output-msg err">ERROR: ${escHtml(result.error)}</div>`;
+    return;
+  }
+  if (result.rows.length === 0) {
+    status.textContent = '✓ 0 rows';
+    status.className = 'output-status ok';
+    body.innerHTML = `<div class="output-msg ok">(0 rows returned)</div>`;
+    return;
+  }
+  const cols = Object.keys(result.rows[0]);
+  status.textContent = `✓ ${result.rows.length} row${result.rows.length !== 1 ? 's' : ''}`;
+  status.className = 'output-status ok';
+  body.innerHTML = `<div class="output-table-wrap"><table class="output-table">
+    <thead><tr>${cols.map(c => `<th>${escHtml(c)}</th>`).join('')}</tr></thead>
+    <tbody>${result.rows.map(r => `<tr>${cols.map(c => `<td>${escHtml(String(r[c] ?? 'NULL'))}</td>`).join('')}</tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// QUIZ
+// ═══════════════════════════════════════════════════════
+function renderQuizSelect() {
+  const list = document.getElementById('quizModuleList');
+  list.innerHTML = Object.entries(QUIZZES).map(([k, q]) => `
+    <div class="sc-card" onclick="startQuiz('${k}')" style="margin-bottom:8px;">
+      <div class="sc-card-header">
+        <div>
+          <div class="sc-card-title">${q.title}</div>
+          <div class="sc-card-meta">${q.questions.length} questions · MCQ with explanations</div>
+        </div>
+        <div class="sc-badge medium">START →</div>
+      </div>
+    </div>`).join('');
+}
+
+function startQuiz(moduleKey) {
+  state.quizModule = moduleKey;
+  state.quizIdx = 0;
+  state.quizAnswers = [];
+  state.quizDone = false;
+  document.getElementById('quizTitle').textContent = QUIZZES[moduleKey].title;
+  showView('quiz');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const quiz = QUIZZES[state.quizModule];
+  const total = quiz.questions.length;
+  const idx = state.quizIdx;
+
+  // Progress dots
+  document.getElementById('quizMeta').textContent = `Question ${idx + 1} of ${total}`;
+  document.getElementById('quizProgress').innerHTML = quiz.questions.map((_, i) => {
+    let cls = i < idx ? (state.quizAnswers[i]?.correct ? 'correct' : 'wrong') : i === idx ? 'current' : '';
+    return `<div class="qp-dot ${cls}"></div>`;
+  }).join('');
+
+  if (state.quizDone) { renderResult(); return; }
+
+  const q = quiz.questions[idx];
+  const answered = state.quizAnswers[idx];
+
+  document.getElementById('quizBody').innerHTML = `
+    <div class="question-card">
+      <div class="q-num">Q${idx + 1} / ${total}</div>
+      <div class="q-text">${q.q}</div>
+      ${q.code ? `<div class="q-code">${escHtml(q.code)}</div>` : ''}
+      ${q.opts.map((opt, i) => {
+        let cls = '';
+        if (answered !== undefined) {
+          if (i === q.ans) cls = 'correct';
+          else if (i === answered.chosen && answered.chosen !== q.ans) cls = 'wrong';
+        }
+        return `<button class="option-btn ${cls}" onclick="answerQuestion(${i})" ${answered !== undefined ? 'disabled' : ''}>
+          <span class="opt-label">${String.fromCharCode(65+i)}</span>${escHtml(opt)}
+        </button>`;
+      }).join('')}
+      ${answered !== undefined ? `<div class="explain-box"><strong>${answered.correct ? '✓ Correct!' : '✗ Incorrect.'}</strong> ${q.explain}</div>` : ''}
+    </div>`;
+
+  document.getElementById('quizActions').innerHTML = answered !== undefined
+    ? `<button class="qa-btn primary" onclick="nextQuestion()">${idx < total - 1 ? 'Next Question →' : 'See Results'}</button>`
+    : '';
+}
+
+function answerQuestion(chosen) {
+  const q = QUIZZES[state.quizModule].questions[state.quizIdx];
+  state.quizAnswers[state.quizIdx] = { chosen, correct: chosen === q.ans };
+  renderQuestion();
+}
+
+function nextQuestion() {
+  if (state.quizIdx < QUIZZES[state.quizModule].questions.length - 1) {
+    state.quizIdx++;
+  } else {
+    state.quizDone = true;
+  }
+  renderQuestion();
+}
+
+function renderResult() {
+  const total = state.quizAnswers.length;
+  const correct = state.quizAnswers.filter(a => a?.correct).length;
+  const pct = Math.round(correct / total * 100);
+  const emoji = pct >= 80 ? '🏆' : pct >= 60 ? '👍' : '📚';
+  document.getElementById('quizBody').innerHTML = `
+    <div class="quiz-result">
+      <div class="result-emoji">${emoji}</div>
+      <div class="result-score">${correct}/${total}</div>
+      <div class="result-label">${pct}% correct</div>
+      <p style="color:var(--muted);font-size:13px;margin-top:16px;">
+        ${pct >= 80 ? 'Excellent! You know this topic well.' : pct >= 60 ? 'Good progress! Review the wrong answers.' : 'Keep studying — revisit the lesson content.'}
+      </p>
+    </div>`;
+  document.getElementById('quizActions').innerHTML = `
+    <button class="qa-btn secondary" onclick="startQuiz('${state.quizModule}')">Retry</button>
+    <button class="qa-btn primary" onclick="showView('quiz-select');setActiveTab(document.querySelectorAll('.ntab')[2])">All Quizzes</button>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// SCENARIOS
+// ═══════════════════════════════════════════════════════
+function renderScenarios() {
+  document.getElementById('scenariosBody').innerHTML = SCENARIOS.map((sc, i) => `
+    <div class="sc-card">
+      <div class="sc-card-header" onclick="toggleScenario(${i})">
+        <div>
+          <div class="sc-card-title">${sc.title}</div>
+          <div class="sc-card-meta">${sc.category}</div>
+        </div>
+        <div class="sc-badge ${sc.severity}">${sc.severity.toUpperCase()}</div>
+      </div>
+      <div class="sc-body" id="sc-body-${i}">
+        ${sc.steps.map((s, j) => `<div class="sc-step">
+          <div class="sc-step-num">${j+1}</div>
+          <div class="sc-step-text">${s}</div>
+        </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function toggleScenario(i) {
+  const body = document.getElementById('sc-body-' + i);
+  body.classList.toggle('open');
+}
+
+// ═══════════════════════════════════════════════════════
+// DAILY CHALLENGE
+// ═══════════════════════════════════════════════════════
+function renderDailyChallenge() {
+  const today = new Date().getDate();
+  const challenge = DAILY_CHALLENGES[today % DAILY_CHALLENGES.length];
+  document.getElementById('dailyQ').textContent = challenge.q;
+  document.getElementById('dailyHint').textContent = '💡 Hint: ' + challenge.hint;
+  document.getElementById('dailyAnswer').innerHTML = challenge.answer;
+}
+
+function revealDaily() {
+  document.getElementById('dailyAnswer').classList.add('show');
+}
+
+function renderInterviewQs() {
+  document.getElementById('interviewList').innerHTML = INTERVIEW_QS.map((q, i) => `
+    <div class="interview-item">
+      <div class="interview-q" onclick="toggleInterview(${i})">
+        <span>${q.q}</span><span style="color:var(--muted)">›</span>
+      </div>
+      <div class="interview-a" id="iq-${i}">${q.a}</div>
+    </div>`).join('');
+}
+
+function toggleInterview(i) {
+  document.getElementById('iq-' + i).classList.toggle('show');
+}
+
+// ═══════════════════════════════════════════════════════
+// BOOKMARKS
+// ═══════════════════════════════════════════════════════
+function renderBookmarks() {
+  const container = document.getElementById('bookmarksList');
+  if (state.bookmarks.length === 0) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">🔖</div>
+      <div class="empty-text">No bookmarks yet</div>
+      <div class="empty-sub">Tap 🏷️ on any lesson to save it here</div>
+    </div>`;
+    return;
+  }
+  container.innerHTML = state.bookmarks.map(id => {
+    const found = state.flatLessons.find(x => x.lesson.id === id);
+    if (!found) return '';
+    const { module: m, lesson: l } = found;
+    return `<div class="bm-item" onclick="openLesson('${m.id}','${l.id}');showView('lesson')">
+      <div>
+        <div class="bm-name">${l.title}</div>
+        <div class="bm-module">${m.icon} ${m.title}</div>
+      </div>
+      <span class="bm-remove" onclick="event.stopPropagation();toggleBookmarkById('${id}');renderBookmarks()">✕</span>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// SEARCH
+// ═══════════════════════════════════════════════════════
+function handleSearch(val) {
+  if (!val.trim() || val.trim().length < 2) return;
+  const results = state.flatLessons.filter(({ lesson: l }) =>
+    l.title.toLowerCase().includes(val.toLowerCase()) ||
+    l.summary?.toLowerCase().includes(val.toLowerCase()) ||
+    (l.keyPoints || []).some(k => k.toLowerCase().includes(val.toLowerCase()))
+  );
+  if (results.length > 0) {
+    const { module: m, lesson: l } = results[0];
+    openLesson(m.id, l.id);
+    document.getElementById('searchInput').value = '';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════
+function copyCode(btn, code) {
+  navigator.clipboard.writeText(code).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function escAttr(s) {
+  return String(s).replace(/`/g,'\\`').replace(/\$/g,'\\$');
+}
+</script>
+</body>
+</html>
